@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS, EMOJI = ROOT / 'fonts', ROOT / 'assets' / 'emoji_ios'   # Apple (iOS) emoji, 64px source
-BUTTER = (255, 236, 92)           # #FFEC5C bright, light butter yellow
+BUTTER = (255, 236, 150)          # #FFEC96 lighter butter yellow
 CREAM = (255, 250, 235)
 INK = (40, 36, 30)
 W, H = 1080, 1920
