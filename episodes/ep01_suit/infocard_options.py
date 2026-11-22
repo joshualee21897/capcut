@@ -39,7 +39,7 @@ im.convert('RGB').save(OUT / 'info_A_tags.jpg', quality=90)
 # --- B: receipt -----------------------------------------------------------------
 im = base(0.6)
 mono = lambda n: ImageFont.truetype(str(FONTS / 'CourierPrime-Regular.ttf'), n)
-rw, rh = 700, 980
+rw, rh = 700, 905
 r = Image.new('RGBA', (rw, rh + 30), (0, 0, 0, 0))
 d = ImageDraw.Draw(r)
 d.rectangle((0, 0, rw, rh), fill=(253, 251, 245))
@@ -55,7 +55,7 @@ d.text((rw / 2, 205), 'fri 6 nov  –  mon 9 nov', font=mono(30), fill=soft, anc
 dash = lambda y: [d.line((x, y, x + 14, y), fill=soft, width=3) for x in range(50, rw - 50, 26)]
 dash(255)
 items = [('2x two-piece suit', ''), ('   black, single-breasted', ''), ('   burgundy, double-breasted', ''),
-         ('1x shirt', ''), ('2x tie', ''), ('alterations', 'incl.'), ('fittings', '2')]
+         ('1x shirt', ''), ('2x tie', '')]
 y = 310
 for a, b in items:
     small = a.startswith('   ')
@@ -68,8 +68,12 @@ dash(y + 5)
 d.text((60, y + 65), 'TOTAL', font=mono(44), fill=ink, anchor='lm')
 d.text((rw - 60, y + 65), 'S$1,038.29', font=mono(44), fill=ink, anchor='rm')
 dash(y + 125)
-d.text((rw / 2, y + 185), 'would recommend', font=mono(34), fill=ink, anchor='mm')
-r.alpha_composite(emoji('✅', 48), (int(rw / 2 + 175), int(y + 161)))
+d.text((rw / 2, y + 160), '* price includes 2 fittings', font=mono(24), fill=soft, anchor='mm')
+d.text((rw / 2, y + 192), '  & all alterations', font=mono(24), fill=soft, anchor='mm')
+rec, ef, eg = 'would recommend', mono(34), 48                # centre text + emoji as one unit
+rx = (rw - (ef.getlength(rec) + 12 + eg)) / 2
+d.text((rx, y + 255), rec, font=ef, fill=ink, anchor='lm')
+r.alpha_composite(emoji('✅', eg), (int(rx + ef.getlength(rec) + 12), int(y + 255 - eg / 2)))
 r = r.rotate(-3, resample=Image.BICUBIC, expand=True)
 sh = Image.new('RGBA', r.size, (0, 0, 0, 0))
 sh.paste((0, 0, 0, 110), mask=r.split()[3])
