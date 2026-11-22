@@ -24,8 +24,8 @@ im.convert('RGB').save(OUT / 'still_intro.jpg', quality=90)
 im = backdrop(Image.open(S / 'f_reveal.png'), blur=20, dim=0.5)
 text(im, (W // 2 - 20, 470), 'the details', font('bootzy', 110), BUTTER, shadow=12)
 rows = [('📍', "ricky's fashion house, bangkok", None),
-        ('💸', 'S$1,038.29', '2 suits, 2 ties, 1 shirt (incl. alterations)'),
-        ('🧵', '2 fittings', '30–45 mins each'),
+        ('💸', 'S$1,038.29', '2 two-piece suits, 1 shirt, 2 ties (incl. alterations)'),
+        ('🧵', '2 fittings + collection', '30–45 mins each'),
         ('🗓', 'friday visit, monday collect', None),
         ('✅', 'would recommend', 'friendly team, great advice')]
 x0, x1, y = 70, 930, 570

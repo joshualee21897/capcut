@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS, EMOJI = ROOT / 'fonts', ROOT / 'assets' / 'emoji_ios'   # Apple (iOS) emoji, 64px source
-BUTTER = (255, 226, 122)          # #FFE27A
+BUTTER = (255, 236, 92)           # #FFEC5C bright, light butter yellow
 CREAM = (255, 250, 235)
 INK = (40, 36, 30)
 W, H = 1080, 1920
@@ -90,8 +90,9 @@ def series_title(im, ep_line, cy=H // 2, series='[ wedding series ]'):
     f1, f2 = font('bootzy', 170), font('bootzy', 290)
     y1 = cy - 140
     text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
-    a_t = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1]
-    y2 = cy + 170                               # baseline of "i do"
+    a_t, a_b = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1::2]
+    d_top = d.textbbox((0, 0), 'd', font=f2, anchor='ls')[1]   # negative: ascender height above baseline
+    y2 = a_b - d_top + 8                        # baseline of "i do", almost touching "absolutlee"
     o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
     o_w, o_h = o_r - o_l, o_b - o_t
     w_i, w_d = f2.getlength('i'), f2.getlength('d')
