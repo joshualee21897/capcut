@@ -8,7 +8,7 @@ Target length: about 1:20–1:30. Vertical 9:16. No music (sound added in TikTok
 - **Great Vibes** script: emotional accent words
 - **Public Sans Italic**: captions, white, lowercase
 - **Be Vietnam Pro**: info card, at the end only
-- **iOS (Apple) emojis**: pop in with a bounce
+- **iOS (Apple) emojis**: pop in with a bounce. Series title emojis are fixed for every episode: 💍 (as the "o"), 🤵 👰 💐 🥂 🤍
 
 **Timeline from the footage**
 - **Fri 6 Nov, 4:48pm:** arrive. Fabric, measurements, lining and shirt (about 1 hr).
@@ -41,7 +41,7 @@ Target length: about 1:20–1:30. Vertical 9:16. No music (sound added in TikTok
 | # | Clips | Audio | On screen + motion |
 |---|---|---|---|
 | 0 | 1401 + 5387 proposal | VO 1 | Opens on the proposal: kneel, then the "she said yes" arm raise. Photo-frame still slides in with a whoosh, 💍 |
-| 1 | 2336 @85s, then 2336 reveal and 2352 bag | VO 2 | **Title frame** (`still_title.jpg`, centred) lands on "welcome to episode 1…" with a sparkle SFX, and emojis pop in one by one. Then a quick 3-cut teaser of the end result, with flash and shutter SFX on a freeze frame. |
+| 1 | 2004 @8.5s (first fitting, WIP), then 2336 reveal and 2352 bag | VO 2 | **Title frame** (`still_title.jpg`, centred) lands on "welcome to episode 1…" with a sparkle SFX, and emojis pop in one by one. Then a quick 3-cut teaser of the end result, with flash and shutter SFX on a freeze frame. |
 | 3 | 1963 street, 1966/1967/1965 shopfront | OG 1963 + VO 3 | Whip pan. 📍 tag "ricky's fashion house, sukhumvit soi 3". 💡 "tip" sticker. |
 | 4 | 1968, 1976, 1971/1972/1974/1975 swatches | VO 4 | 0.6s cuts, pop on each, 👀, speed ramp |
 | 5 | 1977, 1994, 1979 order book | VO 5 + OG 1977 | Punch-in zooms on each word, 📏, freeze frame |

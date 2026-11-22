@@ -12,7 +12,8 @@ W, H = 1080, 1920
 EMOJI_CODES = {'📍': '1f4cd', '💸': '1f4b8', '🧵': '1f9f5', '🗓': '1f5d3', '✅': '2705', '✨': '2728',
                '🤵': '1f935', '💍': '1f48d', '🦩': '1f9a9', '🍺': '1f37a', '😍': '1f60d', '🎉': '1f389',
                '👀': '1f440', '📏': '1f4cf', '🇹🇭': '1f1f9-1f1ed', '💛': '1f49b', '✈️': '2708', '👔': '1f454',
-               '✂️': '2702', '🥰': '1f970', '❤️': '2764', '📸': '1f4f8', '🤍': '1f90d'}
+               '✂️': '2702', '🥰': '1f970', '❤️': '2764', '📸': '1f4f8', '🤍': '1f90d',
+               '👰': '1f470', '💐': '1f490', '🥂': '1f942', '💒': '1f492', '💌': '1f48c', '💕': '1f495'}
 
 
 def font(kind, size):
@@ -55,3 +56,53 @@ def backdrop(frame, blur=18, dim=0.55):
     """Blurred, dimmed frame for title / info card backgrounds."""
     b = frame.convert('RGB').resize((W, H)).filter(ImageFilter.GaussianBlur(blur))
     return Image.blend(Image.new('RGB', (W, H), (0, 0, 0)), b, dim).convert('RGBA')
+
+
+# ---------------------------------------------------------------------------
+# Series title card: same layout + same wedding emojis for every episode
+TAG_BG, TAG_FG = (200, 228, 252, 225), (35, 60, 110)
+SERIES_EMOJIS = [('🤵', -0.36, -0.02, 105, -10), ('👰', 0.36, -0.02, 105, 10),   # (emoji, dx, dy, size, angle)
+                 ('💐', -0.40, 0.16, 95, 12), ('🥂', 0.40, 0.17, 95, -12),     # dx/dy as fraction of W around centre
+                 ('🤍', 0.38, -0.17, 70, 10)]
+
+
+def tag(img, center, s, size=46, angle=0):
+    """[ bracket label ] on a light-blue box."""
+    f = font('caption_reg', size)
+    w, h = int(f.getlength(s)) + 44, size + 30
+    t = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(t)
+    d.rectangle((0, 0, w, h), fill=TAG_BG)
+    d.text((w / 2, h / 2), s, font=f, fill=TAG_FG, anchor='mm')
+    if angle:
+        t = t.rotate(angle, resample=Image.BICUBIC, expand=True)
+    img.alpha_composite(t, (int(center[0] - t.width / 2), int(center[1] - t.height / 2)))
+
+
+def series_title(im, ep_line, cy=H // 2, series='[ wedding series ]'):
+    """Centred block: tag / absolutlee / i d(ring) / ep tag, plus the fixed wedding emojis."""
+    g = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(g)
+    for y in range(H):
+        gd.line((0, y, W, y), fill=(0, 0, 0, int(80 * max(0, 1 - abs(y - cy) / 520))))
+    im.alpha_composite(g)
+    d = ImageDraw.Draw(im)
+    f1, f2 = font('bootzy', 170), font('bootzy', 290)
+    y1 = cy - 140
+    text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
+    a_t = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1]
+    y2 = cy + 170                               # baseline of "i do"
+    o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
+    o_w, o_h = o_r - o_l, o_b - o_t
+    w_i, w_d = f2.getlength('i'), f2.getlength('d')
+    word_gap, o_gap = int(o_w * 0.35), int(o_w * 0.04)
+    x = (W - (w_i + word_gap + w_d + o_gap + o_w)) / 2
+    text(im, (x, y2), 'i', f2, 'white', anchor='ls', shadow=16)
+    text(im, (x + w_i + word_gap, y2), 'd', f2, 'white', anchor='ls', shadow=16)
+    ring = int(o_h * 1.3)
+    paste_emoji(im, '💍', (x + w_i + word_gap + w_d + o_gap + o_w / 2, y2 - o_h / 2 - ring * 0.12), ring, -6)
+    tag(im, (W // 2, a_t - 60), series, 46)
+    tag(im, (W // 2, y2 + 80), ep_line, 46)
+    for e, dx, dy, size, ang in SERIES_EMOJIS:
+        paste_emoji(im, e, (W // 2 + dx * W, cy + dy * W), size, ang)
+    return im
