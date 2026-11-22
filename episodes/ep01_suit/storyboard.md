@@ -1,43 +1,54 @@
-# AbsolutLEE I DO · Wedding Diaries Ep 1: Joshua's suit in Bangkok
+# AbsolutLEE I DO · Wedding series ep 1: custom suits (Bangkok)
 
-Target length: about 70s. Vertical 9:16, no music (sound added in TikTok).
+Target length: about 1:20–1:30. Vertical 9:16. No music (sound added in TikTok).
 
 **Text styles**
-- **Bootzy** (#FFE27A butter yellow): series title and big moments
-- **Great Vibes** script (accent): emotional words
-- **Public Sans Italic** (white, lowercase): captions
-- **Be Vietnam Pro**: info card at the end only
-- Emojis pop in with a bounce animation
+- **Bootzy**: "absolutlee" in butter yellow #FFE27A, "i do" in white, plus big moments
+- **Light-blue [ bracket tags ]**: Public Sans Italic
+- **Great Vibes** script: emotional accent words
+- **Public Sans Italic**: captions, white, lowercase
+- **Be Vietnam Pro**: info card, at the end only
+- **iOS (Apple) emojis**: pop in with a bounce
 
-**Audio key**
-- **VO**: Joshua's voiceover (voice memo)
-- **OG**: original clip audio kept
-- **SFX**: sound effect
+**Timeline from the footage**
+- **Fri 6 Nov, 4:48pm:** arrive. Fabric, measurements, lining and shirt (about 1 hr).
+- **Fri, about 7:30pm:** fitting 1 (basted jacket)
+- **Sat 7 Nov, about 7:50pm:** fitting 2
+- **Mon 9 Nov, about 1:15pm:** final try-on and collection
 
-| # | Time | Clips | Audio / words | On screen + motion |
-|---|---|---|---|---|
-| 1 | 0:00–0:03 | 2336 (burgundy double-breasted turn) | VO: "i flew to bangkok to get my wedding suits made. yes, suits. plural." | Freeze frame on the turn with a camera flash and shutter SFX. Hook text at the top, plus 🤵 and 🇹🇭 popping in. |
-| 2 | 0:03–0:07 | 1401 and 5387 (proposal kneel, "she said yes" arm raise) | VO: "if you watched our proposal prep videos… well, she said yes. so now? it's wedding prep time." | Quick cuts. A photo-frame still of the kneel slides in with a whoosh. 💍 pops in. |
-| 3 | 0:07–0:10 | 1963 (Bangkok street, blurred behind) | SFX: sparkle | **Centred:** "AbsolutLEE I DO" (Bootzy) + "wedding diaries · ep 1" + "joshua's suit" (script). ✨ twinkles, zoom-in transition out. |
-| 4 | 0:10–0:14 | 1963 → 1966/1967 shopfront (whip pan) | OG: "we're here for ricky's fashion house. let's go make some suits." | 📍 "ricky's fashion house, bangkok" pops in small |
-| 5 | 0:14–0:21 | 1968 fabric wall, 1976 rolls, 1971/1972/1974/1975 swatch books, 0.6–0.8s cuts | VO: "first, fabric. there were literally hundreds of options… i went with a bold burgundy… and a classic black." | Pop SFX on each cut. 👀 on "hundreds". Speed ramp on the fabric wall. |
-| 6 | 0:21–0:27 | 1977 arm measure, 1994 neck, 1979 order book | VO: "then measurements. every. single. inch." + OG laugh line from 1977 ("i must make some eye contact") | Each word lands with a punch-in zoom. 📏 pops in. Order book shown as a freeze-frame still. |
-| 7 | 0:27–0:33 | 1983 flamingo lining, 1980/1981/1982 photos as polaroids, 1989 | VO: "and the fun part, the lining. we went with flamingos, because why not." + OG "the flamingo is matching" | Polaroid stills slide in with a shutter SFX. 🦩 bounces. "*why not*" in script. |
-| 8 | 0:33–0:39 | 1999 walk in (night), 2004/2005/2006 basted first fitting | VO: "same evening, first fitting. still in pieces, but already looking promising." | "fitting 1/2" tag. Whoosh transition. |
-| 9 | 0:39–0:49 | 2121 shirt mirror selfie, 2335 trousers, then **2336 reveal** | OG tailor: "completely different when you came in… look like a million bucks." | Slow-mo reveal, freeze frame and sparkle. "*so dapper*" in script. 😍 pops in. |
-| 10 | 0:49–0:55 | 2340/2339 flamingo lining close-up, 2341/2342 ties | VO: "working cuffs so i can wear cufflinks, flamingos on the inside, and matching ties. two looks for the big day." | Quick detail cuts. ✨ |
-| 11 | 0:55–0:58 | 2337/2338 beer | VO: "oh, and they gave me a beer." | 🍺 pops in, comedic freeze frame + pop SFX |
-| 12 | 0:58–1:03 | 2352/2353 collection, 2351 garment bag swing | OG: "alright guys, got my suit. let's go!" | 🎉 pops in, whoosh |
-| 13 | 1:03–1:12 | Info card over a blurred 2336 still, then a 4-photo collage | VO: "all the details are here. ep 2 coming soon." | **Info card (Be Vietnam Pro):** 📍 ricky's fashion house, bangkok · 💸 S$1,038.29: 2 suits, 2 ties, 1 shirt incl. alterations · 🧵 2 fittings (30–45 min each) · 🗓 friday visit, monday collect · ✅ would recommend: friendly team, great advice. Then "ep 2 coming soon ✦" |
+## Voiceover script (Joshua)
 
-## Voiceover script for Joshua (record each line separately, with a pause between)
+1. i flew to bangkok to get my wedding suits made. here's exactly how it went, how much it cost, and if it's worth it.
+2. if you've seen our proposal prep videos… well, she said yes. so now it's wedding prep time.
+3. we went to ricky's fashion house, along sukhumvit soi 3. tip: message them before you fly with photos of the style you want.
+4. friday afternoon, we started with fabric. there are hundreds of options, so go in knowing your colours. i picked a bold burgundy… and a classic black.
+5. then measurements. every. single. inch. the whole consult took about an hour.
+6. the fun part is the details. we chose a flamingo lining, because why not. and for the shirt, they suggested french cuffs so i can wear cufflinks.
+7. first fitting was that same evening. the jacket is still in pieces, they pin and chalk it right on you. second fitting was the next night.
+8. on monday, i collected them.
+9. they matched ties to both suits… and yes, they gave me a beer.
+10. all in: two suits, two ties and a shirt, alterations included, for about a thousand sgd. give yourself at least three days for fittings.
+11. would i recommend them? yes. super friendly team, great advice, and they really know their suits. ep 2 coming soon.
 
-1. i flew to bangkok to get my wedding suits made. yes, suits. plural.
-2. if you watched our proposal prep videos… well, she said yes. so now? it's wedding prep time.
-3. first, fabric. there were literally hundreds of options… i went with a bold burgundy… and a classic black.
-4. then measurements. every. single. inch.
-5. and the fun part, the lining. we went with flamingos, because why not.
-6. same evening, first fitting. still in pieces, but already looking promising.
-7. working cuffs so i can wear cufflinks, flamingos on the inside, and matching ties. two looks for the big day.
-8. oh, and they gave me a beer.
-9. all the details are here. ep 2 coming soon.
+**Original audio kept**
+- 1963: "let's go make some suits"
+- 1977: "i must make some eye contact"
+- 2336 tailor: "completely different when you came in… look like a million bucks"
+- 2352: "alright guys, got my suit. let's go!"
+
+## Storyboard
+
+| # | Clips | Audio | On screen + motion |
+|---|---|---|---|
+| 0 | 2336 @85s | (first frame, also the TikTok cover) | **Title frame** (`still_title.jpg`): "absolutlee / i do", [ wedding series ], [ ep 1: custom suits ]. Emojis pop in one by one. Holds about 1.5s under VO line 1. |
+| 1 | 2336 reveal, 2352 bag | VO 1 | Quick 3-cut teaser of the end result. Flash and shutter SFX on a freeze frame. |
+| 2 | 1401 + 5387 proposal | VO 2 | Photo-frame still of the kneel slides in with a whoosh, 💍 |
+| 3 | 1963 street, 1966/1967/1965 shopfront | OG 1963 + VO 3 | Whip pan. 📍 tag "ricky's fashion house, sukhumvit soi 3". 💡 "tip" sticker. |
+| 4 | 1968, 1976, 1971/1972/1974/1975 swatches | VO 4 | 0.6s cuts, pop on each, 👀, speed ramp |
+| 5 | 1977, 1994, 1979 order book | VO 5 + OG 1977 | Punch-in zooms on each word, 📏, freeze frame |
+| 6 | 1983/1980–1982 lining, 1993 shirt fabric | VO 6 | Polaroid stills with shutter SFX, 🦩, "*why not*" in script |
+| 7 | 1999, 2004–2006 (fri night), 2121 (sat) | VO 7 | "fitting 1" / "fitting 2" tags, whoosh |
+| 8 | 2332–2335 → **2336 reveal** | VO 8 + OG tailor | Slow-mo reveal, sparkle, "*so dapper*" in script, 😍 |
+| 9 | 2341/2342 ties, 2339/2340 lining close-up, 2337/2338 beer | VO 9 | Detail cuts. 🍺 with a funny freeze frame. |
+| 10 | 2352/2353/2351 collection | OG 2352 + VO 10 | 🎉, then cuts to bag shots |
+| 11 | Info card over blurred 2336, then collage | VO 11 | **Info card** (`still_infocard.jpg`) slides up with a ding, "ep 2 coming soon ✨" |

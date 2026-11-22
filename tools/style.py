@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
-FONTS, EMOJI = ROOT / 'fonts', ROOT / 'assets' / 'emoji'
+FONTS, EMOJI = ROOT / 'fonts', ROOT / 'assets' / 'emoji_ios'   # Apple (iOS) emoji, 64px source
 BUTTER = (255, 226, 122)          # #FFE27A
 CREAM = (255, 250, 235)
 INK = (40, 36, 30)
@@ -11,7 +11,8 @@ W, H = 1080, 1920
 
 EMOJI_CODES = {'📍': '1f4cd', '💸': '1f4b8', '🧵': '1f9f5', '🗓': '1f5d3', '✅': '2705', '✨': '2728',
                '🤵': '1f935', '💍': '1f48d', '🦩': '1f9a9', '🍺': '1f37a', '😍': '1f60d', '🎉': '1f389',
-               '👀': '1f440', '📏': '1f4cf', '🇹🇭': '1f1f9-1f1ed', '💛': '1f49b'}
+               '👀': '1f440', '📏': '1f4cf', '🇹🇭': '1f1f9-1f1ed', '💛': '1f49b', '✈️': '2708', '👔': '1f454',
+               '✂️': '2702', '🥰': '1f970', '❤️': '2764', '📸': '1f4f8', '🤍': '1f90d'}
 
 
 def font(kind, size):
@@ -39,7 +40,8 @@ def text(img, xy, s, f, fill, anchor='mm', shadow=10, shadow_alpha=170):
 
 
 def emoji(ch, size):
-    return Image.open(EMOJI / f'{EMOJI_CODES[ch]}.png').convert('RGBA').resize((size, size), Image.LANCZOS)
+    e = Image.open(EMOJI / f'{EMOJI_CODES[ch]}.png').convert('RGBA').resize((size, size), Image.LANCZOS)
+    return e.filter(ImageFilter.UnsharpMask(radius=2, percent=60, threshold=2)) if size > 64 else e
 
 
 def paste_emoji(img, ch, center, size, angle=0):
