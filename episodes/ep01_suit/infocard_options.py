@@ -46,8 +46,11 @@ d.rectangle((0, 0, rw, rh), fill=(253, 251, 245))
 for x in range(0, rw, 30):                                   # zig-zag torn edge
     d.polygon([(x, rh), (x + 15, rh + 22), (x + 30, rh)], fill=(253, 251, 245))
 ink, soft = (45, 42, 38), (120, 112, 104)
-d.text((rw / 2, 90), "ricky's", font=font('bootzy', 90), fill=ink, anchor='mm')
-d.text((rw / 2, 160), 'fashion house · bangkok', font=mono(30), fill=soft, anchor='mm')
+hdr, hs = "ricky's fashion house", 90
+while font('bootzy', hs).getlength(hdr) > rw - 90:      # shrink to fit on one line
+    hs -= 2
+d.text((rw / 2, 95), hdr, font=font('bootzy', hs), fill=ink, anchor='mm')
+d.text((rw / 2, 160), 'sukhumvit soi 3, bangkok', font=mono(30), fill=soft, anchor='mm')
 d.text((rw / 2, 205), 'fri 6 nov  –  mon 9 nov', font=mono(30), fill=soft, anchor='mm')
 dash = lambda y: [d.line((x, y, x + 14, y), fill=soft, width=3) for x in range(50, rw - 50, 26)]
 dash(255)
