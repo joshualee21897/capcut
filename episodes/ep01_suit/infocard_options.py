@@ -39,7 +39,7 @@ im.convert('RGB').save(OUT / 'info_A_tags.jpg', quality=90)
 # --- B: receipt -----------------------------------------------------------------
 im = base(0.6)
 mono = lambda n: ImageFont.truetype(str(FONTS / 'CourierPrime-Regular.ttf'), n)
-rw, rh = 700, 905
+rw, rh = 700, 985
 r = Image.new('RGBA', (rw, rh + 30), (0, 0, 0, 0))
 d = ImageDraw.Draw(r)
 d.rectangle((0, 0, rw, rh), fill=(253, 251, 245))
@@ -66,10 +66,14 @@ for a, b in items:
     y += 48 if small else 58
 dash(y + 5)
 d.text((60, y + 65), 'TOTAL', font=mono(44), fill=ink, anchor='lm')
-d.text((rw - 60, y + 65), 'S$1,038.29', font=mono(44), fill=ink, anchor='rm')
+d.text((rw - 60, y + 65), 'THB 26,500', font=mono(44), fill=ink, anchor='rm')
+d.text((rw - 60, y + 112), '≈ S$1,038.29', font=mono(30), fill=soft, anchor='rm')
+y += 45
 dash(y + 125)
 d.text((rw / 2, y + 160), '* price includes 2 fittings', font=mono(24), fill=soft, anchor='mm')
 d.text((rw / 2, y + 192), '  & all alterations', font=mono(24), fill=soft, anchor='mm')
+d.text((rw / 2, y + 224), '* sgd based on exchange rate', font=mono(24), fill=soft, anchor='mm')
+y += 32
 rec, ef, eg = 'would recommend', mono(34), 48                # centre text + emoji as one unit
 rx = (rw - (ef.getlength(rec) + 12 + eg)) / 2
 d.text((rx, y + 255), rec, font=ef, fill=ink, anchor='lm')

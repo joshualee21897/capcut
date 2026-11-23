@@ -26,7 +26,7 @@ Target length: about 1:20–1:30. Vertical 9:16. No music (sound added in TikTok
 >
 > i came back that same night for my first fitting in a skeleton suit, and again on saturday, where they fixed the length of the pants and tightened the shirt. i even asked for a little extra room, since i'm back at the gym.
 >
-> by monday, everything fit perfectly, and they even handed me a beer. two suits, a shirt and two ties came up to about a thousand sgd, alterations included. would i recommend them? one hundred percent. all the details are on screen. see you in episode two.
+> by monday, everything fit perfectly, and they even handed me a beer. two suits, a shirt and two ties came up to twenty-six thousand five hundred baht, so about a thousand sgd, alterations included. would i recommend them? one hundred percent. all the details are on screen. see you in episode two.
 
 (about 235 words, roughly 1:25–1:30)
 
