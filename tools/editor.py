@@ -358,3 +358,63 @@ def _mux(silent, total, sfx, og_audio, out_path, vo_path):
                     '-c:a', 'aac', '-b:a', '192k', '-t', f'{total:.3f}', '-movflags', '+faststart', str(out_path)],
                    check=True)
     return total
+
+
+# ----------------------------------------------------------------------------- emphasis callouts
+def callout_lines(lines, ch=None, color=None, emoji_size=150):
+    """Big Bootzy emphasis text in mixed sizes, e.g. [('THIS', 90, 'l'), ('GIANT', 240, 'c'), ('TOAD', 110, 'r')].
+    Returns [(sprite, (cx, cy) offset from block centre)] so each line can animate in separately."""
+    color = color or BUTTER
+    sprites = []
+    for s, size, align in lines:
+        sprites.append((sprite_text(s, font('bootzy', size), color, shadow=12, pad=24), align))
+    wmax = max(sp.width for sp, _ in sprites)
+    total_h = sum(sp.height - 40 for sp, _ in sprites)
+    y = -total_h / 2
+    out = []
+    for sp, align in sprites:
+        h = sp.height - 40
+        dx = {'l': -(wmax - sp.width) / 2, 'r': (wmax - sp.width) / 2}.get(align, 0)
+        out.append((sp, (dx, y + h / 2)))
+        y += h
+    if ch:
+        last_sp, (lx, ly) = out[-1] if len(out) == 1 else max(out, key=lambda o: o[0].width)
+        out.append((sticker(ch, emoji_size), (lx + last_sp.width / 2 + emoji_size * 0.35, ly - emoji_size * 0.35)))
+    return out
+
+
+def parse_emphasis(paragraphs, starts, ends, words_per=5, highlight=(), y=1400, size=44):
+    """Paragraphs may mark {emphasised phrases}. Emphasised words are NOT shown as karaoke captions
+    (they become big callouts instead). Placeholder timing spreads words evenly over each paragraph.
+    Returns (karaoke_list, [(phrase_text, t0, t1), ...])."""
+    import re
+    kar, phrases = [], []
+    for para, t0, t1 in zip(paragraphs, starts, ends):
+        toks = []
+        for m in re.finditer(r'\{([^}]*)\}|(\S+)', para):
+            if m.group(1) is not None:
+                ws = m.group(1).split()
+                toks += [(w, len(phrases) + 0.5) for w in ws]   # tagged with a temp phrase marker
+                phrases.append([m.group(1), None, None])
+            else:
+                toks.append((m.group(2), None))
+        step = (t1 - t0) / len(toks)
+        chunk = []
+
+        def flush(end_t):
+            if chunk:
+                kar.append(Karaoke([(w.lower(), ts) for w, ts in chunk], end_t, y, size, highlight))
+                chunk.clear()
+        for i, (w, ph) in enumerate(toks):
+            ts = t0 + i * step
+            if ph is not None:
+                flush(ts)
+                p = phrases[int(ph)]
+                p[1] = ts if p[1] is None else p[1]
+                p[2] = ts + step
+            else:
+                chunk.append((w, ts))
+                if len(chunk) == words_per or w.endswith(('.', '?', '!')):
+                    flush(ts + step)
+        flush(t1)
+    return kar, [tuple(p) for p in phrases]
