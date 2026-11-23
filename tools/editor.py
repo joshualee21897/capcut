@@ -1,0 +1,265 @@
+"""Tiny frame-by-frame vertical video editor (PIL compositing + FFmpeg I/O).
+
+Timeline = list of Shot (sequential). Overlays are timed elements drawn on top.
+Audio = SFX hits + optional original-audio snippets (+ later the voiceover).
+"""
+import math, subprocess, os, hashlib
+from dataclasses import dataclass, field
+from pathlib import Path
+import numpy as np
+from PIL import Image, ImageOps, ImageFilter, ImageDraw, ImageEnhance
+from style import *
+
+FPS = 30
+CACHE = Path(os.environ.get('EDIT_CACHE', '/home/user/edit_cache'))
+CACHE.mkdir(parents=True, exist_ok=True)
+
+
+# ----------------------------------------------------------------------------- shots
+@dataclass
+class Shot:
+    src: str                       # video or photo path, or a callable(t)->Image for generated frames
+    dur: float
+    ss: float = 0.0                # source in-point (video)
+    speed: float = 1.0
+    zoom: tuple = (1.0, 1.06)      # start/end scale (slow push-in by default)
+    trans: str = 'cut'             # cut | punch | whip | flash
+    freeze: bool = False           # hold the in-point frame
+    photo_style: str = 'fill'      # fill | polaroid (for stills)
+    pan: tuple = (0.5, 0.5)        # zoom centre (fraction of frame)
+
+
+def _proxy(shot):
+    """Transcode the used part of a clip to 1080x1920@30 H.264 (cached)."""
+    key = hashlib.md5(f'{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
+    out = CACHE / f'{Path(shot.src).stem}_{key}.mp4'
+    if out.exists():
+        return out
+    src_len = 0.05 if shot.freeze else shot.dur * shot.speed + 0.2
+    vf = f'scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setpts=PTS/{shot.speed},fps={FPS}'
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{shot.ss:.3f}', '-t', f'{src_len:.3f}', '-i', shot.src,
+                    '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', str(out)], check=True)
+    return out
+
+
+class FrameSource:
+    def __init__(self, shot):
+        self.shot, self.n = shot, 0
+        ext = Path(shot.src).suffix.lower() if isinstance(shot.src, str) else ''
+        self.still = None
+        if callable(shot.src):
+            self.gen = shot.src
+        elif ext in ('.jpg', '.jpeg', '.png'):
+            self.still = self._photo(shot.src, shot.photo_style)
+        else:
+            p = _proxy(shot)
+            self.proc = subprocess.Popen(['ffmpeg', '-v', 'error', '-i', str(p), '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
+                                         stdout=subprocess.PIPE)
+            self.last = None
+
+    @staticmethod
+    def _photo(path, style):
+        im = ImageOps.exif_transpose(Image.open(path)).convert('RGB')
+        im.thumbnail((2000, 2000))
+        fill = ImageOps.fit(im, (W, H))
+        if style == 'fill':
+            return fill
+        bg = ImageEnhance.Brightness(fill.filter(ImageFilter.GaussianBlur(30))).enhance(0.6)
+        pw = 760
+        ph = int(pw * im.height / im.width)
+        if ph > 1100:
+            ph = 1100
+            pw = int(ph * im.width / im.height)
+        card = Image.new('RGB', (pw + 50, ph + 170), (252, 250, 245))
+        card.paste(im.resize((pw, ph)), (25, 25))
+        card = card.convert('RGBA').rotate(-4, resample=Image.BICUBIC, expand=True)
+        bg = bg.convert('RGBA')
+        sh = Image.new('RGBA', card.size, (0, 0, 0, 0))
+        sh.paste((0, 0, 0, 120), mask=card.split()[3])
+        x, y = (W - card.width) // 2, (H - card.height) // 2 - 60
+        bg.alpha_composite(sh.filter(ImageFilter.GaussianBlur(20)), (x + 12, y + 20))
+        bg.alpha_composite(card, (x, y))
+        return bg.convert('RGB')
+
+    def frame(self, t):
+        if self.still is not None:
+            return self.still
+        if hasattr(self, 'gen'):
+            return self.gen(t)
+        if self.shot.freeze and self.last is not None:
+            return self.last
+        buf = self.proc.stdout.read(W * H * 3)
+        if len(buf) == W * H * 3:
+            self.last = Image.frombuffer('RGB', (W, H), buf)
+        return self.last
+
+    def close(self):
+        if hasattr(self, 'proc'):
+            self.proc.stdout.close()
+            self.proc.wait()
+
+
+def _zoom(im, s, pan=(0.5, 0.5), dx=0):
+    if abs(s - 1) < 1e-3 and not dx:
+        return im
+    cw, ch = W / s, H / s
+    cx = pan[0] * W - dx / s
+    x0 = min(max(cx - cw / 2, 0), W - cw)
+    y0 = min(max(pan[1] * H - ch / 2, 0), H - ch)
+    return im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
+
+
+def ease_out_back(x, k=1.70158):
+    x -= 1
+    return 1 + (k + 1) * x ** 3 + k * x ** 2
+
+
+# ----------------------------------------------------------------------------- overlays
+@dataclass
+class Overlay:
+    t0: float
+    t1: float
+    layer: Image.Image             # RGBA sprite
+    pos: tuple                     # centre
+    anim: str = 'pop'              # pop | fade | slide_up | none
+    wobble: float = 0.0            # degrees of idle rotation sway
+    full: bool = False             # full-frame layer (pos ignored)
+
+    def draw(self, canvas, t):
+        if not (self.t0 <= t < self.t1):
+            return
+        a = t - self.t0
+        scale, alpha, dy, rot = 1.0, 1.0, 0, 0.0
+        if self.anim == 'pop':
+            scale = max(0.01, ease_out_back(min(a / 0.28, 1)))
+        elif self.anim == 'fade':
+            alpha = min(a / 0.25, 1)
+        elif self.anim == 'slide_up':
+            p = min(a / 0.6, 1)
+            dy = int((1 - (1 - (1 - p) ** 3)) * (H * 0.7))
+        out = self.t1 - t
+        if out < 0.15 and self.anim != 'none':
+            alpha *= out / 0.15
+        if self.wobble:
+            rot = self.wobble * math.sin(2 * math.pi * a / 1.6)
+        spr = self.layer
+        if self.full and scale == 1 and not rot:
+            if alpha < 1:
+                spr = spr.copy()
+                spr.putalpha(spr.split()[3].point(lambda v: int(v * alpha)))
+            canvas.alpha_composite(spr, (0, dy))
+            return
+        if scale != 1:
+            spr = spr.resize((max(1, int(spr.width * scale)), max(1, int(spr.height * scale))), Image.BILINEAR)
+        if rot:
+            spr = spr.rotate(rot, resample=Image.BILINEAR, expand=True)
+        if alpha < 1:
+            spr = spr.copy()
+            spr.putalpha(spr.split()[3].point(lambda v: int(v * alpha)))
+        cx, cy = (W / 2, H / 2) if self.full else self.pos
+        x, y = int(cx - spr.width / 2), int(cy - spr.height / 2 + dy)
+        canvas.alpha_composite(spr, (max(x, 0), max(y, 0)),
+                               (max(-x, 0), max(-y, 0)))
+
+
+def sprite_text(s, f, fill, shadow=8, pad=30):
+    tmp = ImageDraw.Draw(Image.new('RGBA', (1, 1)))
+    l, t, r, b = tmp.textbbox((0, 0), s, font=f, anchor='lt')
+    im = Image.new('RGBA', (r - l + 2 * pad, b - t + 2 * pad), (0, 0, 0, 0))
+    text(im, (pad - l, pad - t), s, f, fill, anchor='lt', shadow=shadow)
+    return im
+
+
+def sprite_emoji(ch, size):
+    return emoji(ch, size)
+
+
+def sprite_tag(s, size=46, ch=None):
+    f = font('caption_reg', size)
+    e = size + 12 if ch else 0
+    w, h = int(f.getlength(s)) + 44 + (e + 14 if ch else 0), size + 30
+    im = Image.new('RGBA', (w, h), TAG_BG)
+    d = ImageDraw.Draw(im)
+    if ch:
+        im.alpha_composite(emoji(ch, e), (18, (h - e) // 2))
+    d.text(((w + (e + 14 if ch else 0)) / 2, h / 2), s, font=f, fill=TAG_FG, anchor='mm')
+    return im
+
+
+def captions_from_script(paragraphs, starts, ends, words_per=4):
+    """Placeholder caption chunks spread evenly over each paragraph's time window."""
+    out = []
+    for para, t0, t1 in zip(paragraphs, starts, ends):
+        words = para.lower().split()
+        chunks = [' '.join(words[i:i + words_per]) for i in range(0, len(words), words_per)]
+        step = (t1 - t0) / len(chunks)
+        for i, c in enumerate(chunks):
+            out.append((t0 + i * step, t0 + (i + 1) * step, c))
+    return out
+
+
+# ----------------------------------------------------------------------------- render
+def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
+    total = sum(s.dur for s in shots)
+    nframes = int(round(total * FPS))
+    silent = str(CACHE / 'video_only.mp4')
+    enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}',
+                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19',
+                            '-pix_fmt', 'yuv420p', silent], stdin=subprocess.PIPE)
+    starts = np.cumsum([0] + [s.dur for s in shots])
+    si, src = -1, None
+    for n in range(nframes):
+        t = n / FPS
+        while si + 1 < len(shots) and t >= starts[si + 1]:
+            if src:
+                src.close()
+            si += 1
+            src = FrameSource(shots[si])
+        sh = shots[si]
+        lt = t - starts[si]
+        base = src.frame(lt)
+        p = lt / sh.dur
+        s = sh.zoom[0] + (sh.zoom[1] - sh.zoom[0]) * p
+        dx = 0
+        tr = min(lt / 0.2, 1)                             # 0.2s transition-in
+        if sh.trans == 'punch' and tr < 1:
+            s *= 1 + 0.18 * (1 - tr) ** 2
+        if sh.trans == 'whip' and tr < 1:
+            dx = int((1 - tr) ** 2 * W * 0.6)
+        im = _zoom(base, s, sh.pan, dx)
+        if sh.trans == 'whip' and tr < 1:
+            im = im.filter(ImageFilter.BoxBlur(int(25 * (1 - tr)) + 1))
+        canvas = im.convert('RGBA')
+        if sh.trans == 'flash' and lt < 0.18:
+            canvas.alpha_composite(Image.new('RGBA', (W, H), (255, 255, 255, int(255 * (1 - lt / 0.18)))))
+        for o in overlays:
+            o.draw(canvas, t)
+        enc.stdin.write(canvas.convert('RGB').tobytes())
+    src.close()
+    enc.stdin.close()
+    enc.wait()
+
+    # audio: silence bed + og snippets + sfx (+ vo)
+    inputs, filters, labels = ['-f', 'lavfi', '-t', f'{total:.3f}', '-i', 'anullsrc=r=44100:cl=stereo'], [], ['[0:a]']
+    k = 1
+    for path, ss, dur, at, vol in og_audio:
+        inputs += ['-ss', f'{ss}', '-t', f'{dur}', '-i', path]
+        filters.append(f'[{k}:a]volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'
+                       f'adelay={int(at * 1000)}|{int(at * 1000)}[a{k}]')
+        labels.append(f'[a{k}]')
+        k += 1
+    for path, at, vol in sfx:
+        inputs += ['-i', path]
+        filters.append(f'[{k}:a]volume={vol},adelay={int(at * 1000)}|{int(at * 1000)}[a{k}]')
+        labels.append(f'[a{k}]')
+        k += 1
+    if vo_path:
+        inputs += ['-i', vo_path]
+        labels.append(f'[{k}:a]')
+        k += 1
+    filters.append(f'{"".join(labels)}amix=inputs={len(labels)}:normalize=0,alimiter=limit=0.95[out]')
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', silent] + inputs +
+                   ['-filter_complex', ';'.join(filters), '-map', '0:v', '-map', '[out]', '-c:v', 'copy',
+                    '-c:a', 'aac', '-b:a', '192k', '-t', f'{total:.3f}', '-movflags', '+faststart', str(out_path)],
+                   check=True)
+    return total
