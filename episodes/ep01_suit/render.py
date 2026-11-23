@@ -108,8 +108,8 @@ ov.append(Overlay(starts[29] + 0.1, starts[31], sprite_tag('alterations', 46, '�
 sfx += [(SFX + 'pop.wav', starts[25] + 0.1, 0.5), (SFX + 'pop.wav', starts[29] + 0.1, 0.5)]
 pop('💪', starts[31] + 0.6, (780, 560))
 ov.append(Overlay(starts[32] + 0.3, starts[32] + 3.0, sprite_text('so dapper', font('script', 130), BUTTER, 10),
-                  (W / 2, 600), 'pop'))
-pop('😍', starts[32] + 0.6, (840, 470))
+                  (W / 2, 1180), 'pop'))
+pop('😍', starts[32] + 0.6, (850, 1080))
 pop('🍺', starts[33] + 0.3, (760, 560), 150, 2.2)
 pop('🎉', starts[36] + 0.4, (780, 520), 140)
 
