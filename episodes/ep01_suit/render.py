@@ -73,7 +73,7 @@ PLAN = [
      (S(v(2121), 2.0, ss=3, trans='whip'), ('w', 'first')), (S(v(2005), 2.0, ss=18, trans='punch'), ('w', 'figure'))],
     [(S(v(2004), 4.0, ss=1.0, zoom=(1.0, 1.06), trans='zoomblur'), None),
      (S(v(2336), 2.0, ss=75, trans='slide'), ('w', 'through')), (S(v(2005), 2.0, ss=15, trans='punch'), ('w', 'decision')),
-     (S(v(1963), 3.0, ss=3.0, trans='whip'), ('w', 'mine'))],
+     (S(v(1963), 3.0, ss=6.5, trans='whip'), ('w', 'mine'))],
     [(S(v(1966), 1.5, ss=0, trans='whip'), None), (S(v(1995), 2.0, ss=0.0, trans='punch'), ('ph', 2)),
      (S(v(1999), 2.0, ss=15.0, trans='zoomblur'), ('w', 'recommended')),
      (S(v(1968), 2.0, ss=1, trans='whip'), ('w', 'already')), (S(v(1976), 1.5, ss=1, trans='punch'), None),
@@ -88,7 +88,7 @@ PLAN = [
     [(S(v(1999), 2.0, ss=4, trans='whip'), None), (S(v(2004), 2.5, ss=1, trans='punch'), ('ph', 6)),
      (S(v(2005), 2.0, ss=2, trans='zoomblur'), None), (S(v(2006), 2.0, ss=26, trans='slide'), ('w', 'shortened')),
      (S(v(2121), 2.0, ss=6, trans='whip'), ('w', 'took')), (S(v(2333), 2.0, ss=12, trans='punch'), ('w', 'adjusted')),
-     (S(v(2011), 2.0, ss=1, trans='punch'), ('w', 'asked')), (S(v(2335), 1.5, ss=2, trans='zoomblur'), ('w', 'surgery'))],
+     (S(v(2333), 2.0, ss=22, trans='punch'), ('w', 'asked')), (S(v(2335), 1.5, ss=2, trans='zoomblur'), ('w', 'surgery'))],
     [(S(v(2336), 3.0, ss=74, trans='flash'), None), (S(v(2337), 2.0, ss=1, trans='punch'), ('ph', 7)),
      (S(v(2353), 3.0, ss=2.5, trans='whip'), ('w', 'thai'))],
     [(S(v(1976), 9.0, ss=0, soft=0.35, zoom=(1.0, 1.05), trans='flash'), None)],          # suit cutouts on top
@@ -161,7 +161,7 @@ for (txt, p0, p1), (lines, ch, y) in zip(phrases, CALLOUTS):
     hit('pop', p0 + 0.12 * len(lines) + 0.05, 0.4)
 
 # --- beats linked to what's on screen -------------------------------------------
-pop('👀', word_t(0, 'figure') + 0.2, (800, 600))
+pop('👀', word_t(0, 'figure') + 0.2, (240, 520))
 tag_in('black · single-breasted', idx[(2, 5)] + 0.1, idx[(2, 7)], (W / 2, 520), '🤵')
 tag_in('burgundy · double-breasted, 4 buttons', word_t(2, 'burgundy'), idx[(2, 7)], (W / 2, 620), '👔')
 photo_in(ph(1973), idx[(2, 9)], para_end[2])
