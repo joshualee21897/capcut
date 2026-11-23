@@ -82,27 +82,35 @@ for i, w in enumerate(seq):
     w['s'] = max(w['s'], s * HOP / SR)
     w['cs'], w['ce'] = max(s * HOP / SR - 0.03, lo), min(e * HOP / SR + 0.05, hi)
 
-# --- splice words, inserting short pauses ---------------------------------------
+# --- splice: words that touch/overlap stay ONE continuous piece of the original audio
+# (never duplicated); cuts + controlled pauses only where there is real silence between words
 fade = int(0.006 * SR)
 GAP_WORD, GAP_COMMA, GAP_END = 0.05, 0.12, 0.28
-out, t_new, new_words, sentence_end_at = [], 0.0, [], []
+chunks = []                                              # [start, end, [word indices]]
 for i, w in enumerate(seq):
-    seg = x[int(w['cs'] * SR):int(w['ce'] * SR)].copy()
+    if chunks and seq[chunks[-1][2][-1]]['r0'] == w['r0'] and w['cs'] <= chunks[-1][1] + 0.01:
+        chunks[-1][1] = max(chunks[-1][1], w['ce'])
+        chunks[-1][2].append(i)
+    else:
+        chunks.append([w['cs'], w['ce'], [i]])
+out, t_new, new_words, sentence_end_at = [], 0.0, [], []
+for ci, (c0, c1, ids) in enumerate(chunks):
+    seg = x[int(c0 * SR):int(c1 * SR)].copy()
     if len(seg) > 2 * fade:
         r = np.linspace(0, 1, fade)
         seg[:fade] *= r
         seg[-fade:] *= r[::-1]
-    new_words.append(dict(w=w['w'], s=t_new + (w['s'] - w['cs']), e=t_new + (min(w['ce'], w['e'] + 0.25) - w['cs'])))
+    for i in ids:
+        w = seq[i]
+        new_words.append(dict(w=w['w'], s=t_new + (w['s'] - c0), e=t_new + (min(w['ce'], w['e'] + 0.25) - c0)))
+        if w['w'].endswith(('.', '?', '!')):
+            sentence_end_at.append(t_new + (w['ce'] - c0))
     out.append(seg)
     t_new += len(seg) / SR
-    if i + 1 < len(seq):
-        end = w['w'].endswith(('.', '?', '!'))
-        pause = GAP_END if end else GAP_COMMA if w['w'].endswith(',') else GAP_WORD
-        if seq[i + 1]['r0'] == w['r0']:
-            pause = min(pause, max(seq[i + 1]['cs'] - w['ce'], 0.0)) if not end else pause
+    if ci + 1 < len(chunks):
+        last = seq[ids[-1]]['w']
+        pause = GAP_END if last.endswith(('.', '?', '!')) else GAP_COMMA if last.endswith(',') else GAP_WORD
         out.append(np.zeros(int(pause * SR), np.float32))
-        if end:
-            sentence_end_at.append(t_new)
         t_new += pause
 y = np.concatenate(out)
 
