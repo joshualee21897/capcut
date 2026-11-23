@@ -35,29 +35,32 @@ SCRIPT = [
     "Two suits, a shirt and two ties came up to {twenty-six five hundred baht.} Alterations included. Would I recommend them? {One hundred percent.}",
     "If you're planning to get a custom suit, save this for later and follow us for more wedding prep shenanigans!",
 ]
-CALLOUTS = [   # (lines, emoji, y) per {phrase}, in order
-    ([('SHE SAID', 100, 'l'), ('YES!', 280, 'r')], '💍', 1060),
-    ([('BANGKOK', 200, 'c')], '✈️', 1060),
-    ([("RICKY'S", 210, 'c'), ('FASHION HOUSE', 86, 'c')], '📍', 1060),
-    ([('THE', 100, 'l'), ('BOLDEST', 220, 'c'), ('ONE', 100, 'r')], '🔥', 1060),
-    ([('PINK', 130, 'l'), ('FLAMINGOS', 175, 'c')], '🦩', 1060),
-    ([('SERIOUS', 130, 'c'), ('on the outside', 66, 'c'), ('PARTY', 230, 'c'), ('on the inside', 66, 'c')], '🥳', 1000),
-    ([('SKELETON', 175, 'c'), ('SUIT', 130, 'r')], '💀', 1060),
-    ([('A', 110, 'l'), ('BEER?!', 240, 'c')], '🍺', 1060),
-    ([('26,500', 210, 'c'), ('BAHT', 110, 'r')], '💸', 260),     # above the suit cutouts
-    ([('100%', 260, 'c')], '✅', 250),
+CAP_Y, CAP_Y_END = 760, 230          # captions at eye level; moved to the top for the cutout/receipt finale
+LOW, HIGH = 1180, 430               # callout bands below / above the caption line
+CALLOUTS = [   # (lines, emojis, y) per {phrase}, in order
+    ([('SHE SAID', 100, 'l'), ('YES!', 280, 'r')], ['💍', '🥹'], LOW),
+    ([('BANGKOK', 200, 'c')], ['✈️', '🇹🇭'], LOW),
+    ([("RICKY'S", 210, 'c'), ('FASHION HOUSE', 86, 'c')], ['📍', '🧵'], LOW),
+    ([('THE', 100, 'l'), ('BOLDEST', 220, 'c'), ('ONE', 100, 'r')], ['🔥', '👔'], HIGH),   # polaroid sits low
+    ([('PINK', 130, 'l'), ('FLAMINGOS', 175, 'c')], ['🦩', '💗'], HIGH),                 # polaroid sits low
+    ([('SERIOUS', 130, 'c'), ('on the outside', 66, 'c'), ('PARTY', 230, 'c'), ('on the inside', 66, 'c')], ['🥳', '💃'], LOW),
+    ([('SKELETON', 175, 'c'), ('SUIT', 130, 'r')], ['💀', '🧵'], LOW),
+    ([('A', 110, 'l'), ('BEER?!', 240, 'c')], ['🍺', '🍻'], LOW),
+    ([('26,500', 210, 'c'), ('BAHT', 110, 'r')], ['💸', '🧾'], HIGH),
+    ([('100%', 260, 'c')], ['✅', '💯'], HIGH),
 ]
 HIGHLIGHT = {'perfectly', 'save'}
-TAIL = 2.0                                                    # end card holds after the last word
+TAIL = 0.5                                                    # end card: short hold, then a clean cut
 
 vo = json.load(open(VO_DIR + 'words_clean.json'))['words']
 toks = align_script(SCRIPT, vo)
-kar, phrases = build_captions(toks, HIGHLIGHT)
+
 vo_len = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0',
                                VO_DIR + 'vo_clean.wav'], capture_output=True, text=True).stdout)
 TOTAL = vo_len + TAIL
 para_start = [0.0] + [max(min(t['s'] for t in toks if t['para'] == i) - 0.15, 0) for i in range(1, len(SCRIPT))]
 para_end = para_start[1:] + [TOTAL]
+_, phrases = build_captions(toks, HIGHLIGHT)
 ph_t = lambda i: phrases[i][1]
 
 
@@ -84,7 +87,7 @@ PLAN = [
      (S(v(1979), 1.5, ss=0, trans='whip'), ('w', 'then')), (S(v(1983), 3.0, ss=8, trans='slide'), ('w', 'lining')),
      (S(v(1984), 1.5, ss=40, soft=0.35, trans='flash'), ('ph', 4)),
      (S(v(2340), 2.5, ss=6, trans='zoomblur'), ('ph', 5)),
-     (S(v(1989), 1.5, ss=2, soft=0.35, trans='flash'), ('w', 'black')), (S(v(1988), 1.5, ss=1, trans='punch'), ('w', 'white'))],
+     (S(v(1986), 1.5, ss=0.5, soft=0.35, trans='flash'), ('w', 'black')), (S(v(1989), 1.5, ss=2, trans='punch'), ('w', 'white'))],
     [(S(v(1999), 2.0, ss=4, trans='whip'), None), (S(v(2004), 2.5, ss=1, trans='punch'), ('ph', 6)),
      (S(v(2005), 2.0, ss=2, trans='zoomblur'), None), (S(v(2006), 2.0, ss=26, trans='slide'), ('w', 'shortened')),
      (S(v(2121), 2.0, ss=6, trans='whip'), ('w', 'took')), (S(v(2333), 2.0, ss=12, trans='punch'), ('w', 'adjusted')),
@@ -119,9 +122,12 @@ ov, top, sfx = [], [], []
 hit = lambda name, t, vol=0.45: sfx.append((SFX + name + '.wav', max(t, 0), vol))
 
 
-def pop(ch, t, pos, size=180, dur=1.8, wob=8, sound='pop'):
+def pop(ch, t, pos, size=180, dur=1.8, wob=8, sound='pop', pair=None):
     ov.append(Overlay(t, t + dur, sticker(ch, size), pos, 'bounce', wob))
     hit(sound, t)
+    if pair:                                              # a second emoji so it never looks lonely
+        p2 = (pos[0] + (-150 if pos[0] > W / 2 else 150), pos[1] + 110)
+        ov.append(Overlay(t + 0.15, t + dur, sticker(pair, int(size * 0.8)), p2, 'bounce', -wob))
 
 
 def tag_in(label, t0, t1, pos, ch=None, size=44):
@@ -130,7 +136,7 @@ def tag_in(label, t0, t1, pos, ch=None, size=44):
 
 
 def photo_in(path, t0, t1, angle=-4):
-    ov.append(Overlay(t0, t1, polaroid(path, width=500, angle=angle), (W / 2, 600), 'drop'))
+    ov.append(Overlay(t0, t1, polaroid(path, width=420, angle=angle), (W / 2, 1230), 'drop'))   # below captions
     hit('shutter', t0 + 0.35, 0.5)
 
 
@@ -150,40 +156,42 @@ for name, spr, c in parts:
 hit('pop', t_title + 1.8, 0.4)
 
 # --- captions + emphasis callouts (drawn last = always on top) -------------------
+t_finale = idx[(6, 0)]
+kar, _ = build_captions(toks, HIGHLIGHT, y_at=lambda t: CAP_Y_END if t >= t_finale - 0.05 else CAP_Y)
 top += [k for k in kar if not (t_title <= k.t0 < t_title_end - 0.3)]
 for (txt, p0, p1), (lines, ch, y) in zip(phrases, CALLOUTS):
     end = max(p1 + 0.7, p0 + 1.4)
     for i, (spr, (dx, dy)) in enumerate(callout_lines(lines, ch)):
-        is_emoji = i == len(lines)
-        t0 = p0 + (0.12 * i if not is_emoji else 0.12 * len(lines) + 0.05)
-        top.insert(0, Overlay(t0, end, spr, (W / 2 + dx, y + dy), 'bounce', 8 if is_emoji else 0))
+        is_emoji = i >= len(lines)
+        t0 = p0 + 0.12 * i + (0.05 if is_emoji else 0)
+        top.insert(0, Overlay(t0, end, spr, (W / 2 + dx, y + dy), 'bounce', (8 if i % 2 else -8) if is_emoji else 0))
     hit('thud', p0, 0.5)
     hit('pop', p0 + 0.12 * len(lines) + 0.05, 0.4)
 
 # --- beats linked to what's on screen -------------------------------------------
-pop('👀', word_t(0, 'figure') + 0.2, (240, 520))
+pop('👀', word_t(0, 'figure') + 0.2, (240, 480), pair='🤔')
 tag_in('black · single-breasted', idx[(2, 5)] + 0.1, idx[(2, 7)], (W / 2, 520), '🤵')
 tag_in('burgundy · double-breasted, 4 buttons', word_t(2, 'burgundy'), idx[(2, 7)], (W / 2, 620), '👔')
 photo_in(ph(1973), idx[(2, 9)], para_end[2])
 hit('zip', idx[(3, 0)] + 0.3, 0.5)
-pop('📏', idx[(3, 0)] + 0.6, (880, 760))
+pop('📏', idx[(3, 0)] + 0.6, (860, 1120), pair='✂️')
 hit('scribble', idx[(3, 2)], 0.45)
 photo_in(ph(1980), idx[(3, 4)], idx[(3, 5)], 4)
-photo_in(ph(1985), idx[(3, 6)], idx[(3, 7)], -3)
+photo_in(ph(1991), idx[(3, 6)], idx[(3, 7)], -3)
 tag_in('fitting', idx[(4, 0)] + 0.1, idx[(4, 3)], (W / 2, 520), '🧵', 48)
 tag_in('alterations', idx[(4, 3)] + 0.1, idx[(4, 6)], (W / 2, 520), '✂️', 48)
 hit('snip', idx[(4, 3)] + 0.3, 0.6)
-pop('💪', word_t(4, 'gym'), (790, 560), 190, sound='thud')
+pop('💪', word_t(4, 'gym'), (800, 480), 190, sound='thud', pair='🏋️')
 hit('riser', idx[(5, 0)] - 1.0, 0.35)
-pop('😍', word_t(5, 'perfectly'), (850, 1060), 190, sound='sparkle')
+pop('😍', word_t(5, 'perfectly'), (850, 1060), 190, sound='sparkle', pair='✨')
 hit('clink', idx[(5, 1)] + 0.2, 0.5)
-pop('🎉', word_t(5, 'thai') + 0.3, (790, 520), 200)
+pop('🎉', word_t(5, 'thai') + 0.3, (800, 480), 200, pair='🇹🇭')
 
 # --- two suits: big turning cutouts over fabric rolls ---------------------------
 t_suits = idx[(6, 0)]
-black, burg = cutout_sprite(CUT + 'black.png', 900), cutout_sprite(CUT + 'burgundy.png', 900)
-ov.append(Overlay(t_suits + 0.1, para_end[6], black, (290, 1330 - black.height / 2), 'bounce', 5, turn=True))
-ov.append(Overlay(t_suits + 0.35, para_end[6], burg, (790, 1330 - burg.height / 2), 'bounce', 5, turn=True))
+black, burg = cutout_sprite(CUT + 'black.png', 950), cutout_sprite(CUT + 'burgundy.png', 950)
+ov.append(Overlay(t_suits + 0.1, para_end[6], black, (290, 1530 - black.height / 2), 'bounce', 6))
+ov.append(Overlay(t_suits + 0.35, para_end[6], burg, (790, 1530 - burg.height / 2), 'bounce', -6))
 hit('pop', t_suits + 0.1, 0.5)
 hit('pop', t_suits + 0.35, 0.5)
 
@@ -193,15 +201,15 @@ rc = receipt_sprite("ricky's fashion house", 'sukhumvit soi 3, bangkok', 'fri 6 
                      ('1x shirt', ''), ('2x tie', '')],
                     'THB 26,500', '≈ S$1,038.29',
                     ['* price includes 1 fitting', '  & all alterations', '* sgd based on exchange rate'])
-s_rc = min(1.0, (1335 - 170) / rc.height)
+s_rc = min(1.05, (1500 - 320) / rc.height)                    # top below the moved-up captions
 rc = rc.resize((int(rc.width * s_rc), int(rc.height * s_rc)), Image.LANCZOS)
 t_end = idx[(7, 0)]
-ov.append(Overlay(t_end + 0.2, TOTAL, rc, (W / 2, 1335 - rc.height / 2), 'slide_up'))
+ov.append(Overlay(t_end + 0.2, TOTAL, rc, (W / 2, 320 + rc.height / 2), 'slide_up', fade_out=False))
 hit('printer', t_end + 0.2, 0.5)
 hit('chaching', t_end + 0.9, 0.5)
 small_b, small_r = cutout_sprite(CUT + 'black.png', 560), cutout_sprite(CUT + 'burgundy.png', 560)
-ov.append(Overlay(t_end + 0.8, TOTAL, small_b, (115, 1335 - small_b.height / 2), 'bounce', 6, turn=True))
-ov.append(Overlay(t_end + 1.0, TOTAL, small_r, (965, 1335 - small_r.height / 2), 'bounce', 6, turn=True))
+ov.append(Overlay(t_end + 0.8, TOTAL, small_b, (115, 1530 - small_b.height / 2), 'bounce', 6, fade_out=False))
+ov.append(Overlay(t_end + 1.0, TOTAL, small_r, (965, 1530 - small_r.height / 2), 'bounce', -6, fade_out=False))
 hit('pop', t_end + 0.8, 0.4)
 hit('pop', t_end + 1.0, 0.4)
 

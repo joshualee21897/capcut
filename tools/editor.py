@@ -38,6 +38,13 @@ def _probe_color(src):
     return r
 
 
+# light film look (not vintage): soft lifted blacks, gentle highlight roll-off, warm highs / cool lows,
+# faint moving grain, very mild vignette
+FILM = ("curves=all='0/0.035 0.25/0.24 0.5/0.5 0.75/0.765 1/0.97',"
+        "colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,"
+        "vignette=angle=0.32,noise=alls=4:allf=t")
+
+
 TONEMAP = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,'
            'zscale=t=bt709:m=bt709:r=tv,format=yuv420p,')
 
@@ -61,7 +68,7 @@ def _grade(src, ss, pre):
 
 def _proxy(shot):
     """Transcode the used part of a clip to OWxOH@30 H.264, tone-mapped (HDR) and colour-matched (cached)."""
-    key = hashlib.md5(f'v4|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
+    key = hashlib.md5(f'v5|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
     out = CACHE / f'{Path(shot.src).stem}_{key}.mp4'
     if out.exists():
         return out
@@ -69,7 +76,7 @@ def _proxy(shot):
     eq = _grade(shot.src, shot.ss + min(shot.dur, 2) / 2, pre)
     src_len = 0.05 if shot.freeze else shot.dur * shot.speed + 0.2
     vf = (pre + f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos,crop={OW}:{OH},'
-          f'setpts=PTS/{shot.speed},fps={FPS},{eq}')
+          f'setpts=PTS/{shot.speed},fps={FPS},{eq},{FILM}')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{shot.ss:.3f}', '-t', f'{src_len:.3f}', '-i', shot.src,
                     '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', str(out)], check=True)
     return out
@@ -159,6 +166,7 @@ class Overlay:
     wobble: float = 0.0            # degrees of idle rotation sway
     full: bool = False             # full-frame layer (pos ignored)
     turn: bool = False             # fake left/right turn (horizontal squash) like an animated sticker
+    fade_out: bool = True
 
     def draw(self, canvas, t):
         if not (self.t0 <= t < self.t1):
@@ -179,7 +187,7 @@ class Overlay:
             p = min(a / 0.6, 1)
             dy = int((1 - (1 - (1 - p) ** 3)) * (H * 0.7))
         out = self.t1 - t
-        if out < 0.15 and self.anim != 'none':
+        if out < 0.15 and self.anim != 'none' and self.fade_out:
             alpha *= out / 0.15
         if self.wobble:
             rot = self.wobble * math.sin(2 * math.pi * a / 1.6)
@@ -249,7 +257,7 @@ class Karaoke:
         self.dim = Image.new('RGBA', self.full.size, (0, 0, 0, 0))
         x, self.edges = pad, []
         for (w, ts), ww in zip(words, widths):
-            col = BUTTER if w.strip('.,?!:').lower() in highlight else (255, 255, 255)
+            col = BUTTER if w.lower() in highlight else (255, 255, 255)
             text(self.full, (x, pad), w, f, col, anchor='la', shadow=6)
             ImageDraw.Draw(self.dim).text((x, pad), w, font=f, fill=col + (self.DIM,), anchor='la')
             x += ww + gap
@@ -424,12 +432,17 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
         out.append((sp, (dx, y + h / 2)))
         y += h
     if ch:
-        last_sp, (lx, ly) = out[-1] if len(out) == 1 else max(out, key=lambda o: o[0].width)
-        ex, ey = lx + last_sp.width / 2 + emoji_size * 0.35, ly - emoji_size * 0.35
-        if W / 2 + ex + emoji_size / 2 + 30 > W:            # would be cut off: tuck it above the right end
-            ex = W / 2 - 40 - emoji_size / 2
-            ey = -total_h / 2 - emoji_size * 0.25
-        out.append((sticker(ch, emoji_size), (ex, ey)))
+        chs = [ch] if isinstance(ch, str) else list(ch)
+        wide_sp, (lx, ly) = max(out, key=lambda o: o[0].width)
+        half = wide_sp.width / 2
+        spots = [(lx + half + emoji_size * 0.3, -total_h / 2 + emoji_size * 0.1, 1),       # top-right
+                 (lx - half - emoji_size * 0.3, total_h / 2 - emoji_size * 0.15, -1)]      # bottom-left
+        for c, (ex, ey, side) in zip(chs, spots):
+            lim = W / 2 - 30 - emoji_size / 2                    # keep the whole sticker on screen
+            if abs(ex) > lim:
+                ex = side * lim
+                ey += -side * emoji_size * 0.55                  # tuck above/below the text instead
+            out.append((sticker(c, emoji_size), (ex, ey)))
     return out
 
 
@@ -529,26 +542,62 @@ def align_script(paragraphs, vo_words):
     return toks
 
 
-def build_captions(toks, highlight=(), words_per=4, y=1400, size=44):
-    """Karaoke lines for non-emphasised words + (text, t0, t1) for each emphasised phrase."""
-    kar, phrases, chunk = [], {}, []
+def clean_caption_word(w):
+    import re
+    w = w.replace('-', ' ').replace('%', ' percent')
+    return re.sub(r"[^a-z0-9' ]", '', w.lower()).strip()
 
-    def flush(next_t):
-        if chunk:
-            end = min(chunk[-1]['e'] + 0.35, next_t) if next_t else chunk[-1]['e'] + 0.6
-            kar.append(Karaoke([(c['w'].lower(), c['s']) for c in chunk], end, y, size, highlight))
-            chunk.clear()
-    for i, t in enumerate(toks):
-        nxt = toks[i + 1]['s'] if i + 1 < len(toks) else None
+
+def build_captions(toks, highlight=(), max_chars=32, y=1400, size=44, y_at=None):
+    """Karaoke lines for the non-emphasised words + (text, t0, t1) for each emphasised phrase.
+    Lines follow phrases: break at sentence ends / emphasis / paragraphs, ~max_chars per line, never a lone word.
+    y_at(t) -> caption y for a line starting at t (lets captions move for an end card)."""
+    runs, phrases, cur = [], {}, []
+    for t in toks:
         if t['phrase'] is not None:
-            flush(t['s'])
+            if cur:
+                runs.append(cur); cur = []
             p = phrases.setdefault(t['phrase'], [[], t['s'], t['e']])
             p[0].append(t['w']); p[2] = t['e']
             continue
-        if chunk and chunk[-1]['para'] != t['para']:
-            flush(t['s'])
-        chunk.append(t)
-        if len(chunk) == words_per or t['w'].endswith(('.', '?', '!', ',')) and len(chunk) >= 2:
-            flush(nxt)
-    flush(None)
+        if cur and cur[-1]['para'] != t['para']:
+            runs.append(cur); cur = []
+        cw = clean_caption_word(t['w']).split()
+        for j, part in enumerate(cw):
+            cur.append(dict(t, w=part, soft=(j == len(cw) - 1 and t['w'].endswith((',', ':', ';')))))
+        if t['w'].endswith(('.', '?', '!')):
+            runs.append(cur); cur = []
+    if cur:
+        runs.append(cur)
+    # merge lone-word runs into a neighbour in the same paragraph
+    merged = []
+    for r in runs:
+        if merged and (len(r) == 1 or len(merged[-1]) == 1) and r[0]['para'] == merged[-1][-1]['para'] \
+                and len(' '.join(x['w'] for x in merged[-1] + r)) <= max_chars + 10:
+            merged[-1] += r
+        else:
+            merged.append(r)
+    lines = []
+    L = lambda ws: len(' '.join(x['w'] for x in ws))
+    for r in merged:
+        line = []
+        for wd in r:
+            if line and L(line + [wd]) > max_chars:
+                soft = [i for i, x in enumerate(line[:-1]) if x.get('soft') and i >= 1]
+                cut = soft[-1] + 1 if soft and L(line[:soft[-1] + 1]) >= 12 else len(line)
+                lines.append(line[:cut]); line = line[cut:]
+            line.append(wd)
+            if wd.get('soft') and L(line) >= 16:              # natural pause: end the line here
+                lines.append(line); line = []
+        if line:
+            if len(line) == 1 and lines and lines[-1][-1]['para'] == line[0]['para'] and L(lines[-1] + line) <= max_chars + 10:
+                lines[-1] += line
+            else:
+                lines.append(line)
+    kar = []
+    for i, ln in enumerate(lines):
+        nxt = lines[i + 1][0]['s'] if i + 1 < len(lines) else None
+        end = min(ln[-1]['e'] + 0.4, nxt) if nxt else ln[-1]['e'] + 0.6
+        yy = y_at(ln[0]['s']) if y_at else y
+        kar.append(Karaoke([(x['w'], x['s']) for x in ln], end, yy, size, highlight))
     return kar, [(' '.join(p[0]), p[1], p[2]) for _, p in sorted(phrases.items())]
