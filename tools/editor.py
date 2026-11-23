@@ -203,6 +203,8 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
     total = sum(s.dur for s in shots)
     nframes = int(round(total * FPS))
     silent = str(CACHE / 'video_only.mp4')
+    if os.environ.get('AUDIO_ONLY'):
+        return _mux(silent, total, sfx, og_audio, out_path, vo_path)
     enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}',
                             '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19',
                             '-pix_fmt', 'yuv420p', silent], stdin=subprocess.PIPE)
@@ -238,10 +240,14 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
     src.close()
     enc.stdin.close()
     enc.wait()
+    return _mux(silent, total, sfx, og_audio, out_path, vo_path)
+
+
+def _mux(silent, total, sfx, og_audio, out_path, vo_path):
 
     # audio: silence bed + og snippets + sfx (+ vo)
-    inputs, filters, labels = ['-f', 'lavfi', '-t', f'{total:.3f}', '-i', 'anullsrc=r=44100:cl=stereo'], [], ['[0:a]']
-    k = 1
+    inputs, filters, labels = ['-f', 'lavfi', '-t', f'{total:.3f}', '-i', 'anullsrc=r=44100:cl=stereo'], [], ['[1:a]']
+    k = 2                                           # input 0 = video, 1 = silence bed
     for path, ss, dur, at, vol in og_audio:
         inputs += ['-ss', f'{ss}', '-t', f'{dur}', '-i', path]
         filters.append(f'[{k}:a]volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'

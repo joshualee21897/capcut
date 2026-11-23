@@ -63,7 +63,7 @@ shots = [
     S(v(2006), 2.5, ss=26), S(v(2121), 2.0, ss=6, trans='whip'), S(v(2335), 2.0, ss=2, trans='punch'),
     S(v(2006), 2.0, ss=8),
     # P6 monday reveal + beer
-    S(v(2336), 3.0, ss=44, trans='flash'), S(v(2337), 2.5, ss=1, trans='punch'), S(v(2338), 2.5, ss=2),
+    S(v(2336), 3.0, ss=74, trans='flash'), S(v(2337), 2.5, ss=1, trans='punch'), S(v(2338), 2.5, ss=2),
     # P7 ties, collection, receipt
     S(v(2341), 1.2, ss=0, trans='punch'), S(v(2342), 1.8, ss=2), S(v(2352), 3.0, ss=1.5, trans='whip'),
     S(str(bgp), 3.0 + 7.0, zoom=(1.0, 1.05), trans='flash'),     # receipt runs through P8
