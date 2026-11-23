@@ -16,19 +16,25 @@ Target length: about 1:20–1:30. Vertical 9:16. No music (sound added in TikTok
 - **Sat 7 Nov, evening:** fitting 2. Pants too long, shirt loose at the waist; both altered. Black suit adjusted.
 - **Mon 9 Nov, about 1:15pm:** final try-on (extra room requested for gym), beer, collection
 
-## Voiceover script (Joshua): read as one continuous take, like telling a friend
+## Voiceover script (Joshua, final from Rochelle): one continuous take
 
-> if you've seen our proposal prep videos… well, she said yes. so now it's officially wedding prep time. welcome to episode one of absolutlee i do, and we're kicking things off with my suits, because i flew all the way to bangkok to get them made. here's how it went, what it cost, and whether it was worth it.
+> Last time you saw me, I was on one knee at River Wonders. She said yes. And the first thing on my wedding to-do list? Figure out what I'm wearing.
 >
-> we landed on friday, and by five i was at ricky's fashion house in sukhumvit, which a friend recommended. i already knew what i wanted: a classic black single-breasted, and a burgundy double-breasted with four buttons. and there are so many shades of burgundy, so of course i went for the boldest one.
+> Welcome to episode one of AbsolutLEE I Do, where we take you through our wedding prep, one decision at a time. And for mine, I flew to Bangkok.
 >
-> they measured literally everything, and then came my favourite part, the lining. they suggested something fun for the burgundy, so pink flamingos it was, which makes the colour pop even more, and a red pattern for the black.
+> We landed on Friday, and by 5pm I was at Ricky's Fashion House in Sukhumvit, recommended by a friend. I already knew what I wanted: a classic black single-breasted, and a burgundy double-breasted with four buttons. There are a lot of shades of burgundy, so I went with the boldest one.
 >
-> i came back that same night for my first fitting in a skeleton suit, and again on saturday, where they fixed the length of the pants and tightened the shirt. i even asked for a little extra room, since i'm back at the gym.
+> They took all my measurements, then came my favourite part, the lining. They suggested something fun for the burgundy, so I went with pink flamingos. Serious on the outside, party on the inside. For the black, I picked a white and red pattern.
 >
-> by monday, everything fit perfectly, and they even handed me a beer. two suits, a shirt and two ties came up to twenty-six thousand five hundred baht, so about a thousand sgd, alterations included. would i recommend them? one hundred percent. all the details are on screen. see you in episode two.
+> On Saturday, I came back for my first fitting in a skeleton suit. They also shortened the pants, took in the shirt and adjusted the black suit. I asked for a little extra room too, since I just had surgery and I'm back at the gym.
+>
+> By Monday, everything fit perfectly. They even handed me a beer while I tried everything on. Thai hospitality at its finest.
+>
+> Two suits, a shirt and two ties came up to twenty-six five hundred baht, alterations included. Would I recommend them? One hundred percent.
+>
+> If you're planning to get a custom suit, save this for later and follow us for more wedding prep shenanigans!
 
-(about 235 words, roughly 1:25–1:30)
+(Captions are shown in lowercase. Around 260 words, roughly 1:30–1:40.)
 
 **Original audio kept**
 - 1963: "let's go make some suits"
