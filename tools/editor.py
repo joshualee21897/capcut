@@ -11,6 +11,8 @@ from PIL import Image, ImageOps, ImageFilter, ImageDraw, ImageEnhance
 from style import *
 
 FPS = 30
+SCALE = int(os.environ.get('EDIT_SCALE', '2'))      # 2 = 4K output (2160x3840); layout stays in 1080 units
+OW, OH = W * SCALE, H * SCALE
 CACHE = Path(os.environ.get('EDIT_CACHE', '/home/user/edit_cache'))
 CACHE.mkdir(parents=True, exist_ok=True)
 
@@ -30,16 +32,46 @@ class Shot:
     soft: float = 0.0              # >0: dim + soften (background under a photo/card)
 
 
+def _probe_color(src):
+    r = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=color_transfer',
+                        '-of', 'csv=p=0', src], capture_output=True, text=True).stdout.strip()
+    return r
+
+
+TONEMAP = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,'
+           'zscale=t=bt709:m=bt709:r=tv,format=yuv420p,')
+
+
+def _grade(src, ss, pre):
+    """Auto colour-match: measure a frame, return an eq filter that pulls brightness and
+    saturation towards a common target so every clip looks like the same video."""
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{ss:.2f}', '-i', src, '-frames:v', '1',
+                          '-vf', pre + 'scale=180:320', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
+                         capture_output=True).stdout
+    if not raw:
+        return 'eq=contrast=1.04:saturation=1.08'
+    a = np.frombuffer(raw, np.uint8).reshape(-1, 3).astype(np.float32) / 255
+    luma = float((a @ np.array([0.2126, 0.7152, 0.0722])).mean())
+    mx, mn = a.max(1), a.min(1)
+    sat = float(np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-3), 0).mean())
+    gamma = float(np.clip(np.log(max(luma, 0.05)) / np.log(0.47), 0.8, 1.45))
+    satf = float(np.clip(0.36 / max(sat, 0.05), 0.95, 1.4))
+    return f'eq=contrast=1.05:gamma={gamma:.3f}:saturation={satf:.3f}'
+
+
 def _proxy(shot):
-    """Transcode the used part of a clip to 1080x1920@30 H.264 (cached)."""
-    key = hashlib.md5(f'{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
+    """Transcode the used part of a clip to OWxOH@30 H.264, tone-mapped (HDR) and colour-matched (cached)."""
+    key = hashlib.md5(f'v4|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
     out = CACHE / f'{Path(shot.src).stem}_{key}.mp4'
     if out.exists():
         return out
+    pre = TONEMAP if _probe_color(shot.src) in ('arib-std-b67', 'smpte2084') else ''
+    eq = _grade(shot.src, shot.ss + min(shot.dur, 2) / 2, pre)
     src_len = 0.05 if shot.freeze else shot.dur * shot.speed + 0.2
-    vf = f'scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},setpts=PTS/{shot.speed},fps={FPS}'
+    vf = (pre + f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos,crop={OW}:{OH},'
+          f'setpts=PTS/{shot.speed},fps={FPS},{eq}')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{shot.ss:.3f}', '-t', f'{src_len:.3f}', '-i', shot.src,
-                    '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', str(out)], check=True)
+                    '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', str(out)], check=True)
     return out
 
 
@@ -62,7 +94,8 @@ class FrameSource:
     def _photo(path, style):
         im = ImageOps.exif_transpose(Image.open(path)).convert('RGB')
         im.thumbnail((2000, 2000))
-        fill = ImageOps.fit(im, (W, H))
+        im.thumbnail((OH, OH))
+        fill = ImageOps.fit(im, (OW, OH))
         if style == 'fill':
             return fill
         bg = ImageEnhance.Brightness(fill.filter(ImageFilter.GaussianBlur(30))).enhance(0.6)
@@ -89,9 +122,9 @@ class FrameSource:
             return self.gen(t)
         if self.shot.freeze and self.last is not None:
             return self.last
-        buf = self.proc.stdout.read(W * H * 3)
-        if len(buf) == W * H * 3:
-            self.last = Image.frombuffer('RGB', (W, H), buf)
+        buf = self.proc.stdout.read(OW * OH * 3)
+        if len(buf) == OW * OH * 3:
+            self.last = Image.frombuffer('RGB', (OW, OH), buf)
         return self.last
 
     def close(self):
@@ -103,11 +136,11 @@ class FrameSource:
 def _zoom(im, s, pan=(0.5, 0.5), dx=0):
     if abs(s - 1) < 1e-3 and not dx:
         return im
-    cw, ch = W / s, H / s
-    cx = pan[0] * W - dx / s
-    x0 = min(max(cx - cw / 2, 0), W - cw)
-    y0 = min(max(pan[1] * H - ch / 2, 0), H - ch)
-    return im.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
+    cw, ch = OW / s, OH / s
+    cx = pan[0] * OW - dx * SCALE / s
+    x0 = min(max(cx - cw / 2, 0), OW - cw)
+    y0 = min(max(pan[1] * OH - ch / 2, 0), OH - ch)
+    return im.resize((OW, OH), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
 
 
 def ease_out_back(x, k=1.70158):
@@ -125,6 +158,7 @@ class Overlay:
     anim: str = 'pop'              # pop | fade | slide_up | none
     wobble: float = 0.0            # degrees of idle rotation sway
     full: bool = False             # full-frame layer (pos ignored)
+    turn: bool = False             # fake left/right turn (horizontal squash) like an animated sticker
 
     def draw(self, canvas, t):
         if not (self.t0 <= t < self.t1):
@@ -152,6 +186,9 @@ class Overlay:
         if self.anim == 'drop':
             rot += rot0
         spr = self.layer
+        if self.turn:
+            sx = 0.86 + 0.14 * abs(math.cos(math.pi * a / 1.3))
+            spr = spr.resize((max(1, int(spr.width * sx)), spr.height), Image.BILINEAR)
         if self.full and scale == 1 and not rot:
             if alpha < 1:
                 spr = spr.copy()
@@ -277,16 +314,17 @@ def captions_from_script(paragraphs, starts, ends, words_per=4):
 
 
 # ----------------------------------------------------------------------------- render
-def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
-    total = sum(s.dur for s in shots)
+def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
+    total = total or sum(s.dur for s in shots)
     nframes = int(round(total * FPS))
     silent = str(CACHE / 'video_only.mp4')
     if os.environ.get('AUDIO_ONLY'):
         return _mux(silent, total, sfx, og_audio, out_path, vo_path)
-    enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}',
-                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19',
+    enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{OW}x{OH}',
+                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
                             '-pix_fmt', 'yuv420p', silent], stdin=subprocess.PIPE)
     starts = np.cumsum([0] + [s.dur for s in shots])
+    white = Image.new('RGB', (OW, OH), (255, 255, 255))
     si, src = -1, None
     for n in range(nframes):
         t = n / FPS
@@ -298,10 +336,8 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
         sh = shots[si]
         lt = t - starts[si]
         base = src.frame(lt)
-        p = lt / sh.dur
-        s = sh.zoom[0] + (sh.zoom[1] - sh.zoom[0]) * p
-        dx = 0
-        tr = min(lt / 0.2, 1)                             # 0.2s transition-in
+        s = sh.zoom[0] + (sh.zoom[1] - sh.zoom[0]) * min(lt / sh.dur, 1)
+        dx, tr = 0, min(lt / 0.2, 1)
         if sh.trans == 'punch' and tr < 1:
             s *= 1 + 0.18 * (1 - tr) ** 2
         if sh.trans == 'whip' and tr < 1:
@@ -310,22 +346,32 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
             s *= 1 + 0.45 * (1 - tr) ** 2
         im = _zoom(base, s, sh.pan, dx)
         if sh.trans in ('whip', 'zoomblur') and tr < 1:
-            im = im.filter(ImageFilter.BoxBlur(int(25 * (1 - tr)) + 1))
+            im = im.resize((OW // 8, OH // 8)).resize((OW, OH), Image.BILINEAR) if tr < 0.5 else \
+                im.filter(ImageFilter.BoxBlur(int(20 * (1 - tr)) + 1))
         if sh.trans == 'slide' and tr < 1:
-            off = int((1 - (1 - (1 - tr) ** 3)) * H)
+            off = int((1 - tr) ** 3 * OH)
             prev = getattr(render, '_last', im)
             frame = prev.copy()
-            frame.paste(im.crop((0, 0, W, H - off)), (0, off))
+            frame.paste(im.crop((0, 0, OW, OH - off)), (0, off))
             im = frame
         if sh.soft:
-            im = ImageEnhance.Brightness(im.resize((W // 6, H // 6)).resize((W, H), Image.BILINEAR)).enhance(1 - sh.soft)
-        canvas = im.convert('RGBA')
+            im = ImageEnhance.Brightness(im.resize((OW // 8, OH // 8)).resize((OW, OH), Image.BILINEAR)).enhance(1 - sh.soft)
         if sh.trans == 'flash' and lt < 0.18:
-            canvas.alpha_composite(Image.new('RGBA', (W, H), (255, 255, 255, int(255 * (1 - lt / 0.18)))))
-        for o in overlays:
-            o.draw(canvas, t)
+            im = Image.blend(im, white, 1 - lt / 0.18)
         render._last = im
-        enc.stdin.write(canvas.convert('RGB').tobytes())
+        # overlays are laid out in 1080-wide units, then scaled up onto the 4K frame
+        ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        for o in overlays:
+            o.draw(ov, t)
+        bb = ov.getbbox()
+        if bb:
+            reg = ov.crop(bb)
+            if SCALE != 1:
+                reg = reg.resize((reg.width * SCALE, reg.height * SCALE), Image.BICUBIC)
+            frame = im.copy() if im is base else im
+            frame.paste(reg, (bb[0] * SCALE, bb[1] * SCALE), reg)
+            im = frame
+        enc.stdin.write(im.tobytes())
     src.close()
     enc.stdin.close()
     enc.wait()
@@ -379,7 +425,30 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
         y += h
     if ch:
         last_sp, (lx, ly) = out[-1] if len(out) == 1 else max(out, key=lambda o: o[0].width)
-        out.append((sticker(ch, emoji_size), (lx + last_sp.width / 2 + emoji_size * 0.35, ly - emoji_size * 0.35)))
+        ex, ey = lx + last_sp.width / 2 + emoji_size * 0.35, ly - emoji_size * 0.35
+        if W / 2 + ex + emoji_size / 2 + 30 > W:            # would be cut off: tuck it above the right end
+            ex = W / 2 - 40 - emoji_size / 2
+            ey = -total_h / 2 - emoji_size * 0.25
+        out.append((sticker(ch, emoji_size), (ex, ey)))
+    return out
+
+
+def cutout_sprite(path, height, outline=8):
+    """Background-removed person as a sticker (white outline + soft shadow), scaled to height."""
+    im = Image.open(path).convert('RGBA')
+    im = im.resize((int(im.width * height / im.height), height), Image.LANCZOS)
+    pad = outline + 20
+    c = Image.new('RGBA', (im.width + 2 * pad, im.height + 2 * pad), (0, 0, 0, 0))
+    c.alpha_composite(im, (pad, pad))
+    a = c.split()[3].point(lambda v: 255 if v > 60 else 0).filter(ImageFilter.MaxFilter(outline * 2 + 1))
+    out = Image.new('RGBA', c.size, (0, 0, 0, 0))
+    sh = Image.new('RGBA', c.size, (0, 0, 0, 0))
+    sh.putalpha(a.point(lambda v: v * 0.4))
+    out.alpha_composite(sh.filter(ImageFilter.GaussianBlur(12)), (6, 10))
+    wl = Image.new('RGBA', c.size, (255, 255, 255, 0))
+    wl.putalpha(a.filter(ImageFilter.GaussianBlur(1)))
+    out.alpha_composite(wl)
+    out.alpha_composite(c)
     return out
 
 
@@ -418,3 +487,68 @@ def parse_emphasis(paragraphs, starts, ends, words_per=5, highlight=(), y=1400, 
                     flush(ts + step)
         flush(t1)
     return kar, [tuple(p) for p in phrases]
+
+
+# ----------------------------------------------------------------------------- script <-> voiceover alignment
+def _norm(w):
+    import re
+    return re.sub(r'[^a-z0-9]', '', w.lower())
+
+
+def align_script(paragraphs, vo_words):
+    """Give every script word a time from the cleaned VO's Whisper words (script text wins for spelling).
+    Script may contain {emphasis phrases}. Returns list of dicts: w, s, e, para, phrase (id or None)."""
+    import re, difflib
+    toks, pid = [], 0
+    for pi, para in enumerate(paragraphs):
+        for m in re.finditer(r'\{([^}]*)\}|(\S+)', para):
+            if m.group(1) is not None:
+                for w in m.group(1).split():
+                    toks.append(dict(w=w, para=pi, phrase=pid))
+                pid += 1
+            else:
+                toks.append(dict(w=m.group(2), para=pi, phrase=None))
+    A, B = [_norm(t['w']) for t in toks], [_norm(w['w']) for w in vo_words]
+    sm = difflib.SequenceMatcher(None, A, B, autojunk=False)
+    for blk in sm.get_matching_blocks():
+        for k in range(blk.size):
+            toks[blk.a + k]['s'], toks[blk.a + k]['e'] = vo_words[blk.b + k]['s'], vo_words[blk.b + k]['e']
+    # interpolate unmatched words between their matched neighbours
+    known = [i for i, t in enumerate(toks) if 's' in t]
+    for i, t in enumerate(toks):
+        if 's' in t:
+            continue
+        lo = max([k for k in known if k < i], default=None)
+        hi = min([k for k in known if k > i], default=None)
+        t0 = toks[lo]['e'] if lo is not None else 0.0
+        t1 = toks[hi]['s'] if hi is not None else t0 + 0.4 * (i - (lo or 0))
+        n_lo, n_hi = (lo if lo is not None else -1), (hi if hi is not None else len(toks))
+        frac0 = (i - n_lo - 1) / max(n_hi - n_lo - 1, 1)
+        frac1 = (i - n_lo) / max(n_hi - n_lo - 1, 1)
+        t['s'], t['e'] = t0 + (t1 - t0) * frac0, t0 + (t1 - t0) * frac1
+    return toks
+
+
+def build_captions(toks, highlight=(), words_per=4, y=1400, size=44):
+    """Karaoke lines for non-emphasised words + (text, t0, t1) for each emphasised phrase."""
+    kar, phrases, chunk = [], {}, []
+
+    def flush(next_t):
+        if chunk:
+            end = min(chunk[-1]['e'] + 0.35, next_t) if next_t else chunk[-1]['e'] + 0.6
+            kar.append(Karaoke([(c['w'].lower(), c['s']) for c in chunk], end, y, size, highlight))
+            chunk.clear()
+    for i, t in enumerate(toks):
+        nxt = toks[i + 1]['s'] if i + 1 < len(toks) else None
+        if t['phrase'] is not None:
+            flush(t['s'])
+            p = phrases.setdefault(t['phrase'], [[], t['s'], t['e']])
+            p[0].append(t['w']); p[2] = t['e']
+            continue
+        if chunk and chunk[-1]['para'] != t['para']:
+            flush(t['s'])
+        chunk.append(t)
+        if len(chunk) == words_per or t['w'].endswith(('.', '?', '!', ',')) and len(chunk) >= 2:
+            flush(nxt)
+    flush(None)
+    return kar, [(' '.join(p[0]), p[1], p[2]) for _, p in sorted(phrases.items())]
