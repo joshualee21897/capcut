@@ -94,7 +94,7 @@ PLAN = [
      (S(v(2333), 2.0, ss=22, trans='punch'), ('w', 'asked')), (S(v(2335), 1.5, ss=2, trans='zoomblur'), ('w', 'surgery'))],
     [(S(v(2336), 3.0, ss=74, trans='flash'), None), (S(v(2337), 2.0, ss=1, trans='punch'), ('ph', 7)),
      (S(v(2353), 3.0, ss=2.5, trans='whip'), ('w', 'thai'))],
-    [(S(v(1968), 4.5, ss=0, soft=0.35, zoom=(1.0, 1.05), trans='flash'), None),          # suit cutouts on top
+    [(S(v(1968), 4.5, ss=2.5, soft=0.35, zoom=(1.0, 1.05), trans='flash'), None),          # suit cutouts on top
      (S(v(1976), 4.5, ss=0, soft=0.35, zoom=(1.0, 1.05)), None)],                        # (people-free parts only)
     [(S(v(2345), 7.0, ss=0.5, soft=0.45, zoom=(1.0, 1.06), trans='flash'), None)],       # receipt over the tie wall
 ]
