@@ -70,7 +70,7 @@ d.text((rw - 60, y + 65), 'THB 26,500', font=mono(44), fill=ink, anchor='rm')
 d.text((rw - 60, y + 112), '≈ S$1,038.29', font=mono(30), fill=soft, anchor='rm')
 y += 45
 dash(y + 125)
-d.text((rw / 2, y + 160), '* price includes 2 fittings', font=mono(24), fill=soft, anchor='mm')
+d.text((rw / 2, y + 160), '* price includes 1 fitting', font=mono(24), fill=soft, anchor='mm')
 d.text((rw / 2, y + 192), '  & all alterations', font=mono(24), fill=soft, anchor='mm')
 d.text((rw / 2, y + 224), '* sgd based on exchange rate', font=mono(24), fill=soft, anchor='mm')
 y += 32
