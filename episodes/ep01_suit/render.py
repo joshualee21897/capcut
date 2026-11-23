@@ -47,7 +47,7 @@ shots = [
     S(v(1972), 2.0, ss=2, trans='whip'), S(v(1974), 2.0, ss=2, trans='punch'), S(v(1972), 2.0, ss=6, soft=0.35, trans='flash'),
     # P4 measurements + linings
     S(v(1977), 3.0, ss=3, trans='zoomblur'), S(v(1994), 2.0, ss=3, trans='punch'), S(v(1979), 1.5, ss=0, trans='whip'),
-    S(v(1983), 3.0, ss=8, trans='slide'), S(v(1983), 1.5, ss=14, soft=0.35, trans='flash'),
+    S(v(1983), 3.0, ss=8, trans='slide'), S(v(1984), 1.5, ss=40, soft=0.35, trans='flash'),
     S(v(2340), 2.5, ss=6, trans='zoomblur'), S(v(1989), 1.5, ss=2, soft=0.35, trans='flash'),
     S(v(1988), 1.5, ss=1, trans='punch'),
     # P5 fitting + alterations
@@ -133,7 +133,7 @@ hit('riser', st[32] - 1.2, 0.5)
 pop('😍', st[32] + 0.6, (850, 1060), 190, sound='sparkle')
 pop('🍺', st[33] + 0.3, (770, 560), 210, 2.2, sound='clink')
 hit('whoosh', st[34], 0.4)
-pop('🎉', st[36] + 0.4, (790, 520), 200)
+pop('🎉', st[37] + 0.4, (790, 520), 200)
 
 # receipt prints up over moving footage, cha-ching on the total, then save sticker
 rc = receipt_sprite("ricky's fashion house", 'sukhumvit soi 3, bangkok', 'fri 6 nov  –  mon 9 nov',
@@ -142,9 +142,9 @@ rc = receipt_sprite("ricky's fashion house", 'sukhumvit soi 3, bangkok', 'fri 6 
                     'THB 26,500', '≈ S$1,038.29',
                     ['* price includes 1 fitting', '  & all alterations', '* sgd based on exchange rate'])
 rc = rc.resize((int(rc.width * 0.85), int(rc.height * 0.85)), Image.LANCZOS)   # leave room for captions
-ov.append(Overlay(st[37] + 0.3, T[-1], rc, (W / 2, H / 2 - 150), 'slide_up'))
-hit('printer', st[37] + 0.3, 0.6)
-hit('chaching', st[37] + 1.0, 0.6)
+ov.append(Overlay(st[38] + 0.3, T[-1], rc, (W / 2, H / 2 - 150), 'slide_up'))
+hit('printer', st[38] + 0.3, 0.6)
+hit('chaching', st[38] + 1.0, 0.6)
 tag_in('save for later', T[7] + 1.5, T[-1], (W / 2, 1590), '🔖', 50)
 
 # transition sounds
