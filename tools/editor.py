@@ -27,6 +27,7 @@ class Shot:
     freeze: bool = False           # hold the in-point frame
     photo_style: str = 'fill'      # fill | polaroid (for stills)
     pan: tuple = (0.5, 0.5)        # zoom centre (fraction of frame)
+    soft: float = 0.0              # >0: dim + soften (background under a photo/card)
 
 
 def _proxy(shot):
@@ -132,9 +133,15 @@ class Overlay:
         scale, alpha, dy, rot = 1.0, 1.0, 0, 0.0
         if self.anim == 'pop':
             scale = max(0.01, ease_out_back(min(a / 0.28, 1)))
+        elif self.anim == 'bounce':                         # strong sticker bounce
+            scale = max(0.01, ease_out_back(min(a / 0.35, 1), 3.2))
+        elif self.anim == 'drop':                           # falls in from above, settles
+            p = min(a / 0.45, 1)
+            dy = int(-(1 - ease_out_back(p, 1.2)) * 700)
+            rot0 = (1 - p) * 14
         elif self.anim == 'fade':
             alpha = min(a / 0.25, 1)
-        elif self.anim == 'slide_up':
+        elif self.anim == 'slide_up':  # noqa
             p = min(a / 0.6, 1)
             dy = int((1 - (1 - (1 - p) ** 3)) * (H * 0.7))
         out = self.t1 - t
@@ -142,6 +149,8 @@ class Overlay:
             alpha *= out / 0.15
         if self.wobble:
             rot = self.wobble * math.sin(2 * math.pi * a / 1.6)
+        if self.anim == 'drop':
+            rot += rot0
         spr = self.layer
         if self.full and scale == 1 and not rot:
             if alpha < 1:
@@ -186,6 +195,75 @@ def sprite_tag(s, size=46, ch=None):
     return im
 
 
+class Karaoke:
+    """One caption line: all words shown dim, each word fills to full colour as it's spoken.
+    words: [(word, t_start), ...]; highlight: set of lowercase words drawn in BUTTER."""
+    DIM = 120
+
+    def __init__(self, words, t1, y=1400, size=44, highlight=()):
+        self.t0, self.t1, self.y = words[0][1], t1, y
+        f = font('caption', size)
+        pad, gap = 30, f.getlength(' ')
+        widths = [f.getlength(w) for w, _ in words]
+        tw = sum(widths) + gap * (len(words) - 1)
+        asc, desc = f.getmetrics()
+        hgt = asc + desc + 2 * pad
+        self.full = Image.new('RGBA', (int(tw + 2 * pad), hgt), (0, 0, 0, 0))
+        self.dim = Image.new('RGBA', self.full.size, (0, 0, 0, 0))
+        x, self.edges = pad, []
+        for (w, ts), ww in zip(words, widths):
+            col = BUTTER if w.strip('.,?!:').lower() in highlight else (255, 255, 255)
+            text(self.full, (x, pad), w, f, col, anchor='la', shadow=6)
+            ImageDraw.Draw(self.dim).text((x, pad), w, font=f, fill=col + (self.DIM,), anchor='la')
+            x += ww + gap
+            self.edges.append((ts, int(x - gap / 2)))
+        sh = Image.new('RGBA', self.dim.size, (0, 0, 0, 0))
+        sh.putalpha(self.dim.split()[3].point(lambda v: v // 2))
+        self.dim = Image.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5)), self.dim)
+
+    def draw(self, canvas, t):
+        if not (self.t0 <= t < self.t1):
+            return
+        x0, y0 = int((W - self.full.width) / 2), int(self.y - self.full.height / 2)
+        canvas.alpha_composite(self.dim, (x0, y0))
+        cut = 0
+        for ts, edge in self.edges:
+            if t >= ts:
+                cut = edge
+        if cut:
+            canvas.alpha_composite(self.full.crop((0, 0, cut, self.full.height)), (x0, y0))
+
+
+def karaoke_from_script(paragraphs, starts, ends, words_per=5, highlight=(), y=1400, size=44):
+    """Placeholder word timing: words evenly spread over each paragraph (until the VO exists)."""
+    out = []
+    for para, t0, t1 in zip(paragraphs, starts, ends):
+        words = para.lower().split()
+        step = (t1 - t0) / len(words)
+        for i in range(0, len(words), words_per):
+            chunk = [(w, t0 + (i + j) * step) for j, w in enumerate(words[i:i + words_per])]
+            end = t0 + min(i + words_per, len(words)) * step
+            out.append(Karaoke(chunk, end, y, size, highlight))
+    return out
+
+
+def polaroid(path, width=640, angle=-4):
+    im = ImageOps.exif_transpose(Image.open(path)).convert('RGB')
+    im.thumbnail((1600, 1600))
+    ph = int(width * im.height / im.width)
+    if ph > 860:
+        ph, width = 860, int(860 * im.width / im.height)
+    card = Image.new('RGBA', (width + 44, ph + 150), (252, 250, 245, 255))
+    card.paste(im.resize((width, ph)), (22, 22))
+    card = card.rotate(angle, resample=Image.BICUBIC, expand=True)
+    out = Image.new('RGBA', (card.width + 40, card.height + 50), (0, 0, 0, 0))
+    sh = Image.new('RGBA', card.size, (0, 0, 0, 0))
+    sh.paste((0, 0, 0, 120), mask=card.split()[3])
+    out.alpha_composite(sh.filter(ImageFilter.GaussianBlur(16)), (24, 34))
+    out.alpha_composite(card, (10, 10))
+    return out
+
+
 def captions_from_script(paragraphs, starts, ends, words_per=4):
     """Placeholder caption chunks spread evenly over each paragraph's time window."""
     out = []
@@ -228,14 +306,25 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None):
             s *= 1 + 0.18 * (1 - tr) ** 2
         if sh.trans == 'whip' and tr < 1:
             dx = int((1 - tr) ** 2 * W * 0.6)
+        if sh.trans == 'zoomblur' and tr < 1:
+            s *= 1 + 0.45 * (1 - tr) ** 2
         im = _zoom(base, s, sh.pan, dx)
-        if sh.trans == 'whip' and tr < 1:
+        if sh.trans in ('whip', 'zoomblur') and tr < 1:
             im = im.filter(ImageFilter.BoxBlur(int(25 * (1 - tr)) + 1))
+        if sh.trans == 'slide' and tr < 1:
+            off = int((1 - (1 - (1 - tr) ** 3)) * H)
+            prev = getattr(render, '_last', im)
+            frame = prev.copy()
+            frame.paste(im.crop((0, 0, W, H - off)), (0, off))
+            im = frame
+        if sh.soft:
+            im = ImageEnhance.Brightness(im.resize((W // 6, H // 6)).resize((W, H), Image.BILINEAR)).enhance(1 - sh.soft)
         canvas = im.convert('RGBA')
         if sh.trans == 'flash' and lt < 0.18:
             canvas.alpha_composite(Image.new('RGBA', (W, H), (255, 255, 255, int(255 * (1 - lt / 0.18)))))
         for o in overlays:
             o.draw(canvas, t)
+        render._last = im
         enc.stdin.write(canvas.convert('RGB').tobytes())
     src.close()
     enc.stdin.close()

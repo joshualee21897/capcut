@@ -80,17 +80,22 @@ def tag(img, center, s, size=46, angle=0):
     img.alpha_composite(t, (int(center[0] - t.width / 2), int(center[1] - t.height / 2)))
 
 
-def series_title(im, ep_line, cy=H // 2, series='[ wedding series ]'):
-    """Centred block: tag / absolutlee / i d(ring) / ep tag, plus the fixed wedding emojis."""
-    g = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(g)
-    for y in range(H):
-        gd.line((0, y, W, y), fill=(0, 0, 0, int(80 * max(0, 1 - abs(y - cy) / 520))))
-    im.alpha_composite(g)
+def series_title(im, ep_line, cy=H // 2, series='[ wedding series ]', parts=None):
+    """Centred block: tag / absolutlee / i d(ring) / ep tag, plus the fixed wedding emojis.
+    parts: optional set of names to draw only some pieces (for animation):
+    dim, tag1, absolutlee, i, d, ring, tag2, emoji0..emoji4"""
+    on = lambda n: parts is None or n in parts
+    if on('dim'):
+        g = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(g)
+        for y in range(H):
+            gd.line((0, y, W, y), fill=(0, 0, 0, int(80 * max(0, 1 - abs(y - cy) / 520))))
+        im.alpha_composite(g)
     d = ImageDraw.Draw(im)
     f1, f2 = font('bootzy', 170), font('bootzy', 290)
     y1 = cy - 140
-    text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
+    if on('absolutlee'):
+        text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
     a_t, a_b = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1::2]
     d_top = d.textbbox((0, 0), 'd', font=f2, anchor='ls')[1]   # negative: ascender height above baseline
     y2 = a_b - d_top + 8                        # baseline of "i do", almost touching "absolutlee"
@@ -99,12 +104,50 @@ def series_title(im, ep_line, cy=H // 2, series='[ wedding series ]'):
     w_i, w_d = f2.getlength('i'), f2.getlength('d')
     word_gap, o_gap = int(o_w * 0.35), int(o_w * 0.04)
     x = (W - (w_i + word_gap + w_d + o_gap + o_w)) / 2
-    text(im, (x, y2), 'i', f2, 'white', anchor='ls', shadow=16)
-    text(im, (x + w_i + word_gap, y2), 'd', f2, 'white', anchor='ls', shadow=16)
+    if on('i'):
+        text(im, (x, y2), 'i', f2, 'white', anchor='ls', shadow=16)
+    if on('d'):
+        text(im, (x + w_i + word_gap, y2), 'd', f2, 'white', anchor='ls', shadow=16)
     ring = int(o_h * 1.3)
-    paste_emoji(im, '💍', (x + w_i + word_gap + w_d + o_gap + o_w / 2, y2 - o_h / 2 - ring * 0.12), ring, -6)
-    tag(im, (W // 2, a_t - 60), series, 46)
-    tag(im, (W // 2, y2 + 80), ep_line, 46)
-    for e, dx, dy, size, ang in SERIES_EMOJIS:
-        paste_emoji(im, e, (W // 2 + dx * W, cy + dy * W), size, ang)
+    if on('ring'):
+        paste_emoji(im, '💍', (x + w_i + word_gap + w_d + o_gap + o_w / 2, y2 - o_h / 2 - ring * 0.12), ring, -6)
+    if on('tag1'):
+        tag(im, (W // 2, a_t - 60), series, 46)
+    if on('tag2'):
+        tag(im, (W // 2, y2 + 80), ep_line, 46)
+    for i, (e, dx, dy, size, ang) in enumerate(SERIES_EMOJIS):
+        if on(f'emoji{i}'):
+            paste_emoji(im, e, (W // 2 + dx * W, cy + dy * W), size, ang)
     return im
+
+
+TITLE_ORDER = ['tag1', 'absolutlee', 'i', 'd', 'ring', 'tag2', 'emoji0', 'emoji1', 'emoji2', 'emoji3', 'emoji4']
+
+
+def series_title_parts(ep_line, cy=H // 2, series='[ wedding series ]'):
+    """Return (dim_layer, [(name, sprite, centre), ...]) for line-by-line animation."""
+    dim = series_title(Image.new('RGBA', (W, H), (0, 0, 0, 0)), ep_line, cy, series, {'dim'})
+    out = []
+    for n in TITLE_ORDER:
+        layer = series_title(Image.new('RGBA', (W, H), (0, 0, 0, 0)), ep_line, cy, series, {n})
+        bb = layer.getbbox()
+        out.append((n, layer.crop(bb), ((bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2)))
+    return dim, out
+
+
+def sticker(ch, size, outline=7):
+    """Emoji with a white sticker outline + soft shadow so it pops on any footage."""
+    e = emoji(ch, size)
+    pad = outline + 16
+    c = Image.new('RGBA', (size + 2 * pad, size + 2 * pad), (0, 0, 0, 0))
+    c.paste(e, (pad, pad), e)
+    a = c.split()[3].point(lambda v: 255 if v > 40 else 0).filter(ImageFilter.MaxFilter(outline * 2 + 1))
+    out = Image.new('RGBA', c.size, (0, 0, 0, 0))
+    sh = Image.new('RGBA', c.size, (0, 0, 0, 0))
+    sh.putalpha(a.point(lambda v: v * 0.45))
+    out.alpha_composite(sh.filter(ImageFilter.GaussianBlur(8)), (0, 0))
+    white = Image.new('RGBA', c.size, (255, 255, 255, 0))
+    white.putalpha(a.filter(ImageFilter.GaussianBlur(1)))
+    out.alpha_composite(white)
+    out.alpha_composite(c)
+    return out
