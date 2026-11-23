@@ -441,7 +441,7 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
             lim = W / 2 - 30 - emoji_size / 2                    # keep the whole sticker on screen
             if abs(ex) > lim:
                 ex = side * lim
-                ey += -side * emoji_size * 0.55                  # tuck above/below the text instead
+                ey = -total_h / 2 - emoji_size * 0.3             # tuck above the text, never below onto faces
             out.append((sticker(c, emoji_size), (ex, ey)))
     return out
 

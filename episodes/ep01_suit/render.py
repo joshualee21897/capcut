@@ -46,8 +46,8 @@ CALLOUTS = [   # (lines, emojis, y) per {phrase}, in order
     ([('SERIOUS', 130, 'c'), ('on the outside', 66, 'c'), ('PARTY', 230, 'c'), ('on the inside', 66, 'c')], ['🥳', '💃'], LOW),
     ([('SKELETON', 175, 'c'), ('SUIT', 130, 'r')], ['💀', '🧵'], LOW),
     ([('A', 110, 'l'), ('BEER?!', 240, 'c')], ['🍺', '🍻'], LOW),
-    ([('26,500', 210, 'c'), ('BAHT', 110, 'r')], ['💸', '🧾'], HIGH),
-    ([('100%', 260, 'c')], ['✅', '💯'], HIGH),
+    ([('26,500', 200, 'c'), ('BAHT', 105, 'r')], ['💸', '🧾'], 400),
+    ([('100%', 250, 'c')], ['✅', '💯'], 400),
 ]
 HIGHLIGHT = {'perfectly', 'save'}
 TAIL = 0.5                                                    # end card: short hold, then a clean cut
@@ -94,8 +94,8 @@ PLAN = [
      (S(v(2333), 2.0, ss=22, trans='punch'), ('w', 'asked')), (S(v(2335), 1.5, ss=2, trans='zoomblur'), ('w', 'surgery'))],
     [(S(v(2336), 3.0, ss=74, trans='flash'), None), (S(v(2337), 2.0, ss=1, trans='punch'), ('ph', 7)),
      (S(v(2353), 3.0, ss=2.5, trans='whip'), ('w', 'thai'))],
-    [(S(v(1976), 9.0, ss=0, soft=0.35, zoom=(1.0, 1.05), trans='flash'), None)],          # suit cutouts on top
-    [(S(v(1968), 7.0, ss=3, soft=0.45, zoom=(1.0, 1.05), trans='flash'), None)],          # receipt on top
+    [(S(v(1968), 9.0, ss=0, soft=0.35, zoom=(1.0, 1.05), trans='flash'), None)],          # suit cutouts on top
+    [(S(v(1976), 7.0, ss=0, soft=0.45, zoom=(1.0, 1.05), trans='flash'), None)],          # receipt on top
 ]
 shots, idx = [], {}
 for pi, plan in enumerate(PLAN):
@@ -177,7 +177,7 @@ hit('zip', idx[(3, 0)] + 0.3, 0.5)
 pop('📏', idx[(3, 0)] + 0.6, (860, 1120), pair='✂️')
 hit('scribble', idx[(3, 2)], 0.45)
 photo_in(ph(1980), idx[(3, 4)], idx[(3, 5)], 4)
-photo_in(ph(1991), idx[(3, 6)], idx[(3, 7)], -3)
+photo_in(ph(1991), idx[(3, 6)], idx[(3, 7)] + 1.0, -3)
 tag_in('fitting', idx[(4, 0)] + 0.1, idx[(4, 3)], (W / 2, 520), '🧵', 48)
 tag_in('alterations', idx[(4, 3)] + 0.1, idx[(4, 6)], (W / 2, 520), '✂️', 48)
 hit('snip', idx[(4, 3)] + 0.3, 0.6)
@@ -189,7 +189,7 @@ pop('🎉', word_t(5, 'thai') + 0.3, (800, 480), 200, pair='🇹🇭')
 
 # --- two suits: big turning cutouts over fabric rolls ---------------------------
 t_suits = idx[(6, 0)]
-black, burg = cutout_sprite(CUT + 'black.png', 950), cutout_sprite(CUT + 'burgundy.png', 950)
+black, burg = cutout_sprite(CUT + 'black.png', 880), cutout_sprite(CUT + 'burgundy.png', 880)
 ov.append(Overlay(t_suits + 0.1, para_end[6], black, (290, 1530 - black.height / 2), 'bounce', 6))
 ov.append(Overlay(t_suits + 0.35, para_end[6], burg, (790, 1530 - burg.height / 2), 'bounce', -6))
 hit('pop', t_suits + 0.1, 0.5)
@@ -201,7 +201,7 @@ rc = receipt_sprite("ricky's fashion house", 'sukhumvit soi 3, bangkok', 'fri 6 
                      ('1x shirt', ''), ('2x tie', '')],
                     'THB 26,500', '≈ S$1,038.29',
                     ['* price includes 1 fitting', '  & all alterations', '* sgd based on exchange rate'])
-s_rc = min(1.05, (1500 - 320) / rc.height)                    # top below the moved-up captions
+s_rc = min(1.05, (1500 - 320) / rc.height, 690 / rc.width)    # top below the captions; leave room for side cutouts
 rc = rc.resize((int(rc.width * s_rc), int(rc.height * s_rc)), Image.LANCZOS)
 t_end = idx[(7, 0)]
 ov.append(Overlay(t_end + 0.2, TOTAL, rc, (W / 2, 320 + rc.height / 2), 'slide_up', fade_out=False))
