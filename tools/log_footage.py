@@ -7,6 +7,11 @@ import json, subprocess, sys, os
 from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+try:
+    import pillow_heif
+    pillow_heif.register_heif_opener()      # iPhone HEIC photos
+except ImportError:
+    pass
 
 src, out = Path(sys.argv[1]), Path(sys.argv[2])
 out.mkdir(parents=True, exist_ok=True)
