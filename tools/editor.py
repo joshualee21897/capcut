@@ -387,7 +387,7 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
         if sh.trans == 'flash' and lt < 0.18:
             im = Image.blend(im, white, 1 - lt / 0.18)
         render._last = im
-        behind = [o for o in overlays if o.behind and o.t0 <= t < o.t1]
+        behind = [o for o in overlays if getattr(o, 'behind', False) and o.t0 <= t < o.t1]
         if behind:                                   # big words behind the person
             bl = Image.new('RGBA', (W, H), (0, 0, 0, 0))
             for o in behind:
@@ -405,7 +405,7 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
         # overlays are laid out in 1080-wide units, then scaled up onto the 4K frame
         ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         for o in overlays:
-            if not o.behind:
+            if not getattr(o, 'behind', False):
                 o.draw(ov, t)
         bb = ov.getbbox()
         if bb:
