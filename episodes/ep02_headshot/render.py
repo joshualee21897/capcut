@@ -39,8 +39,8 @@ CAP_Y, CAP_Y_END = 760, 230
 LOW, HIGH, BEHIND_Y = 1330, 430, 470
 # per {phrase}: (lines, emojis, y, behind_person)   None = no callout (handled elsewhere)
 CALLOUTS = [
-    ([('POV:', 110, 'l'), ('this is your sign to', 66, 'c'), ('UPDATE YOUR', 120, 'c'), ('LINKEDIN', 200, 'c'),
-      ('photo on holiday', 80, 'c')], ['💼', '📸'], 1230, False),
+    ([('POV:', 110, 'c'), ('this is your sign to', 66, 'c'), ('UPDATE YOUR', 120, 'c'),
+      ('LINKEDIN PHOTO', 150, 'c', (255, 255, 255)), ("while you're on holiday", 70, 'c')], ['💼', '📸'], 1230, False),
     ([('HOLO FACE', 190, 'c')], ['📍', '✨'], LOW, False),
     ([('SOFT', 170, 'l'), ('or', 80, 'c'), ('BOLD?', 200, 'r')], ['💄', '🎨'], LOW, False),
     ([('1 HOUR', 210, 'c'), ('hair + makeup', 80, 'c')], ['💇', '💄'], LOW, False),
@@ -96,7 +96,7 @@ PLAN = [
      (S(v(7612), 2.0, ss=6, trans='whip'), ('w', 'styles')), (S(v(7609), 1.2, ss=0.5, trans='punch'), ('ph', 4)),
      (S(v(7610), 1.2, ss=1, trans='punch'), None), (S(v(7613), 1.5, ss=2, trans='zoomblur'), ('w', 'professional'))],
     # 5 test shots (text behind her), pants -> skirt
-    [(S(v(7625), 2.5, ss=4.5, zoom=(1.1, 1.18), trans='punch'), None),                  # pants test shot first (full length)
+    [(S(v(7632), 2.5, ss=6.0, zoom=(1.35, 1.42), pan=(0.62, 0.62), trans='punch'), None),  # pants test shot on set, text behind her
      (S(v(7625), 1.5, ss=7.5, trans='whip'), ('w', 'pants')), (S(v(7625), 1.2, ss=10, trans='punch'), ('w', 'flattering')),
      (S(v(7634), 2.0, ss=9, trans='flash'), ('w', 'skirt'))],
     # 6 posing (POSE behind her), friend directed
@@ -116,8 +116,9 @@ PLAN = [
      (S(v(7997), 1.2, zoom=(1.0, 1.06), trans='punch'), ('w', 'before')),
      (S(v(7634), 3.9, ss=1, soft=0.4, zoom=(1.0, 1.05), trans='flash'), ('w', 'message'))],     # badges on top
     # 9 prints + photo card for Josh
-    [(S(v(8395), 2.0, ss=1, trans='whip'), None), (S(v(8395), 2.0, ss=10, trans='punch'), ('w', 'gave')),
-     (S(v(8396), 2.5, ss=3, trans='punch'), ('w', 'because')), (S(v(8396), 1.5, ss=12, trans='zoomblur'), ('w', 'obviously'))],
+    [(S(v(8395), 2.0, ss=1, trans='whip'), None),
+     (S(v(8396), 3.0, ss=5.0, trans='punch'), ('w', 'gave')),                       # the phone kiss, held longer
+     (S(v(8396), 2.2, ss=11.4, trans='zoomblur'), ('ph', 11))],             # second kiss
     # 10 LinkedIn end card over the wardrobe
     [(S(v(7665), 4.0, ss=0, speed=0.38, soft=0.45, zoom=(1.0, 1.06), trans='flash'), None)],
 ]
@@ -192,6 +193,9 @@ for k, (n, ang, x) in enumerate([(8001, 4, 195), (8002, 0, 540), (8003, -4, 885)
     ov.append(Overlay(t0, idx[(8, 0)], b, (x, 1340 - b.height / 2), 'drop', 3 * (1 if k % 2 else -1)))   # cards end above the bottom UI
     hit('shutter', t0 + 0.3, 0.55)
 pop('😍', t_badges + 1.6, (870, 1480), 170, sound='sparkle', pair='✨')
+for k, (ch, pos, dt) in enumerate([('😘', (820, 560), 0.6), ('💋', (250, 640), 0.9), ('😘', (300, 520), 0.2), ('💋', (830, 640), 0.5)]):
+    base_t = idx[(8, 1)] if k < 2 else idx[(8, 2)]
+    pop(ch, base_t + dt, pos, 170, dur=1.6, sound='pop')
 tag_in('emsphere, bangkok', idx[(1, 0)] + 0.3, idx[(1, 3)], (W / 2, 560), '📍')
 tag_in('1 photo booked', ph_t(8) + 0.2, ph_t(9) - 0.05, (W / 2, 560), '📸')
 tag_in('3 photos taken home', ph_t(9) + 0.2, ph_t(9) + 2.0, (W / 2, 560), '📸')

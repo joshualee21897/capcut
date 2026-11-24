@@ -55,25 +55,30 @@ TONEMAP = ('zscale=t=linear:npl=203,format=gbrpf32le,zscale=p=bt709,tonemap=tone
 
 
 def _grade(src, ss, pre):
-    """Auto colour-match: measure a frame, return an eq filter that pulls brightness and
-    saturation towards a common target so every clip looks like the same video."""
+    """Auto colour-match: measure a frame and pull brightness, white balance (skin tones) and
+    saturation towards one common target, so every clip looks like the same video."""
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{ss:.2f}', '-i', src, '-frames:v', '1',
                           '-vf', pre + 'scale=180:320', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'],
                          capture_output=True).stdout
     if not raw:
-        return 'eq=contrast=1.04:saturation=1.08'
+        return 'eq=contrast=1.04'
     a = np.frombuffer(raw, np.uint8).reshape(-1, 3).astype(np.float32) / 255
+    mid = a[(a.max(1) > 0.08) & (a.min(1) < 0.95)]                    # ignore blown highlights / crushed blacks
+    mid = mid if len(mid) > 100 else a
+    m = mid.mean(0)
+    gains = np.clip((m.mean() / np.maximum(m, 1e-3)) ** 0.5, 0.88, 1.12)   # half-strength grey-world white balance
     luma = float((a @ np.array([0.2126, 0.7152, 0.0722])).mean())
     mx, mn = a.max(1), a.min(1)
     sat = float(np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-3), 0).mean())
-    gamma = float(np.clip(np.log(max(luma, 0.05)) / np.log(0.47), 0.8, 1.45))
-    satf = float(np.clip(0.36 / max(sat, 0.05), 0.95, 1.4))
-    return f'eq=contrast=1.05:gamma={gamma:.3f}:saturation={satf:.3f}'
+    gamma = float(np.clip(np.log(max(luma, 0.05)) / np.log(0.47), 0.85, 1.3))
+    satf = float(np.clip(0.30 / max(sat, 0.05), 0.8, 1.25))
+    return (f'colorchannelmixer=rr={gains[0]:.3f}:gg={gains[1]:.3f}:bb={gains[2]:.3f},'
+            f'eq=contrast=1.04:gamma={gamma:.3f}:saturation={satf:.3f}')
 
 
 def _proxy(shot):
     """Transcode the used part of a clip to OWxOH@30 H.264, tone-mapped (HDR) and colour-matched (cached)."""
-    key = hashlib.md5(f'v5|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
+    key = hashlib.md5(f'v6|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
     out = CACHE / f'{Path(shot.src).stem}_{key}.mp4'
     if out.exists():
         return out
@@ -456,8 +461,10 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
     Returns [(sprite, (cx, cy) offset from block centre)] so each line can animate in separately."""
     color = color or BUTTER
     sprites = []
-    for s, size, align in lines:
-        sprites.append((sprite_text(s, font('bootzy', size), color, shadow=12, pad=24), align))
+    for ln in lines:
+        s_, size, align = ln[:3]
+        col = ln[3] if len(ln) > 3 else color
+        sprites.append((sprite_text(s_, font('bootzy', size), col, shadow=14, pad=24), align))
     wmax = max(sp.width for sp, _ in sprites)
     total_h = sum(sp.height - 40 for sp, _ in sprites)
     y = -total_h / 2

@@ -64,15 +64,13 @@ def lanyard_badge(photo_path, title='HEADSHOT', sub='2026 · bangkok', w=300, st
     except ImportError:
         pass
     photo = ImageOps.exif_transpose(Image.open(photo_path)).convert('RGB')
-    h = int(w * 1.48)
-    card = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    d = ImageDraw.Draw(card)
-    d.rounded_rectangle((0, 0, w, h), 22, fill=(252, 251, 247, 255))
-    d.rounded_rectangle((w / 2 - 34, 16, w / 2 + 34, 30), 7, fill=(205, 205, 205, 255))      # slot
-    pw, ph = w - 36, int((w - 36) * 1.2)
-    card.paste(ImageOps.fit(photo, (pw, ph), centering=(0.5, 0.18)), (18, 46))               # keep the head in
-    d.text((w / 2, 46 + ph + 34), title, font=font('bootzy', 44), fill=(40, 36, 30), anchor='mm')
-    d.text((w / 2, 46 + ph + 72), sub, font=font('info', 20), fill=(120, 112, 104), anchor='mm')
+    pw, ph = w, int(w * 1.3)
+    h = ph
+    pic = ImageOps.fit(photo, (pw, ph), centering=(0.5, 0.18)).convert('RGBA')      # photo only, head kept in
+    m = Image.new('L', (pw, ph), 0)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, pw, ph), 18, fill=255)
+    card = Image.new('RGBA', (pw, ph), (0, 0, 0, 0))
+    card.paste(pic, (0, 0), m)
     # strap: two ribbons from the clip up out of frame
     sw = 44
     strap = Image.new('RGBA', (w + 160, strap_len), (0, 0, 0, 0))
