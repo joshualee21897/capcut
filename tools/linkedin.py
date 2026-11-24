@@ -64,13 +64,13 @@ def lanyard_badge(photo_path, title='HEADSHOT', sub='2026 · bangkok', w=300, st
     except ImportError:
         pass
     photo = ImageOps.exif_transpose(Image.open(photo_path)).convert('RGB')
-    pw, ph = w, int(w * 1.3)
-    h = ph
-    pic = ImageOps.fit(photo, (pw, ph), centering=(0.5, 0.18)).convert('RGBA')      # photo only, head kept in
-    m = Image.new('L', (pw, ph), 0)
-    ImageDraw.Draw(m).rounded_rectangle((0, 0, pw, ph), 18, fill=255)
-    card = Image.new('RGBA', (pw, ph), (0, 0, 0, 0))
-    card.paste(pic, (0, 0), m)
+    pw, ph = w - 36, int((w - 36) * 1.2)
+    h = 46 + ph + 40                                                    # white ID card, no text on it
+    card = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(card)
+    d.rounded_rectangle((0, 0, w, h), 22, fill=(252, 251, 247, 255))
+    d.rounded_rectangle((w / 2 - 34, 16, w / 2 + 34, 30), 7, fill=(205, 205, 205, 255))      # slot
+    card.paste(ImageOps.fit(photo, (pw, ph), centering=(0.5, 0.18)), (18, 46))               # keep the head in
     # strap: two ribbons from the clip up out of frame
     sw = 44
     strap = Image.new('RGBA', (w + 160, strap_len), (0, 0, 0, 0))
@@ -80,13 +80,6 @@ def lanyard_badge(photo_path, title='HEADSHOT', sub='2026 · bangkok', w=300, st
         top_x = cx + side * (w / 2 + 40)
         poly = [(cx + side * 6, strap_len), (cx + side * (6 + sw), strap_len), (top_x + side * sw / 2, 0), (top_x - side * sw / 2, 0)]
         sd.polygon(poly, fill=BUTTER + (255,))
-    for yy in range(60, strap_len - 80, 150):                                                # printed brand text
-        for side in (-1, 1):
-            x = cx + side * (6 + sw / 2 + (w / 2 + 40 - 6 - sw / 2) * (1 - yy / strap_len))
-            txt = Image.new('RGBA', (140, 34), (0, 0, 0, 0))
-            ImageDraw.Draw(txt).text((70, 17), 'absolutlee', font=font('bootzy', 22), fill=(60, 50, 20), anchor='mm')
-            txt = txt.rotate(90 if side < 0 else -90, expand=True)
-            strap.alpha_composite(txt, (int(x - txt.width / 2), int(yy)))
     sd.rounded_rectangle((cx - 22, strap_len - 18, cx + 22, strap_len + 2), 6, fill=(170, 170, 175, 255))  # metal clip
     out = Image.new('RGBA', (strap.width, strap_len + h - 10), (0, 0, 0, 0))
     out.alpha_composite(strap, (0, 0))
