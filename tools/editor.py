@@ -492,8 +492,8 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
         chs = [ch] if isinstance(ch, str) else list(ch)
         wide_sp, (lx, ly) = max(out, key=lambda o: o[0].width)
         half = wide_sp.width / 2
-        spots = [(lx + half + emoji_size * 0.3, -total_h / 2 + emoji_size * 0.1, 1),       # top-right
-                 (lx - half - emoji_size * 0.3, total_h / 2 - emoji_size * 0.15, -1)]      # bottom-left
+        spots = [(lx + half + emoji_size * 0.15, -total_h / 2 - emoji_size * 0.3, 1),     # above the top-right corner
+                 (lx - half - emoji_size * 0.15, total_h / 2 + emoji_size * 0.15, -1)]    # below the bottom-left corner
         for c, (ex, ey, side) in zip(chs, spots):
             lim = W / 2 - 30 - emoji_size / 2                    # keep the whole sticker on screen
             if abs(ex) > lim:

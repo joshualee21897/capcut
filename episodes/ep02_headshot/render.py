@@ -205,13 +205,14 @@ t_end = idx[(9, 0)]
 card = linkedin_post(v(8002), [('📍', 'Holo Face, Emsphere, Bangkok'), ('📸', 'Professional Portrait · 3 retouched photos'),
                                ('💸', 'THB 3,888'), ('💄', 'hair, makeup, styling + outfits included'),
                                ('⚡', 'edits back the same day')])
-card = card.resize((int(card.width * 0.97), int(card.height * 0.97)), Image.LANCZOS)
+k = min((SAFE[2] - SAFE[0]) / card.width, (SAFE[3] - 470) / card.height)   # fit below the heading, inside safe area
+card = card.resize((int(card.width * k), int(card.height * k)), Image.LANCZOS)
 ov.append(Overlay(t_end + 0.3, TOTAL, card, (W / 2, 470 + card.height / 2), 'slide_up', fade_out=False))
 hit('ding', t_end + 0.9, 0.5)
 h1 = sprite_text('NEW PFP', font('bootzy', 110), 'white', 12)
 h2 = sprite_text('UNLOCKED', font('bootzy', 125), BUTTER, 12)
-ov.append(Overlay(t_end + 0.1, TOTAL, h1, (W / 2 - 70, 330), 'bounce', fade_out=False))
-ov.append(Overlay(t_end + 0.25, TOTAL, h2, (W / 2 + 50, 425), 'bounce', fade_out=False))
+ov.append(Overlay(t_end + 0.1, TOTAL, h1, (W / 2 - 70, 300), 'bounce', fade_out=False))
+ov.append(Overlay(t_end + 0.25, TOTAL, h2, (W / 2 + 50, 395), 'bounce', fade_out=False))
 ov.append(Overlay(t_end + 0.45, TOTAL, sticker('🔓', 110), (870, 300), 'bounce', 8, fade_out=False))
 ov.append(Overlay(t_end + 0.55, TOTAL, sticker('💼', 100), (130, 440), 'bounce', -8, fade_out=False))
 hit('thud', t_end + 0.1, 0.5)
