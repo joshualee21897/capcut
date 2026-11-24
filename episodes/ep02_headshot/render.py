@@ -116,7 +116,7 @@ PLAN = [
      (S(v(7997), 1.2, zoom=(1.0, 1.06), trans='punch'), ('w', 'before')),
      (S(v(7634), 3.9, ss=1, soft=0.4, zoom=(1.0, 1.05), trans='flash'), ('w', 'message'))],     # badges on top
     # 9 prints + photo card for Josh
-    [(S(v(8395), 2.0, ss=1, trans='whip'), None),
+    [(S(v(8395), 2.0, ss=5.3, trans='whip'), None),                                 # Josh already picking a card
      (S(v(8396), 3.0, ss=5.0, trans='punch'), ('w', 'gave')),                       # the phone kiss, held longer
      (S(v(8396), 2.2, ss=11.4, trans='zoomblur'), ('ph', 11))],             # second kiss
     # 10 LinkedIn end card over the wardrobe

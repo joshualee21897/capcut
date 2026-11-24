@@ -47,9 +47,10 @@ Facts: Holo Face, Emsphere mall. Booked 1 photo, upgraded to the 8th-anniversary
 
 ## To do when Rochelle's voiceover arrives
 
-1. **Hook text:** "pov: this is your sign to update your" goes on **two lines**, all in small caps (line 1 "pov: this is your sign to", line 2 "update your"). Then **LINKEDIN PHOTO** (big, white) and "while you're on holiday" as now.
+1. **Hook text:** "pov: this is your sign to update your" goes on **two lines**, all **lowercase** at the smaller size (line 1 "pov: this is your sign to", line 2 "update your"). Then **LINKEDIN PHOTO** (big, white) and "while you're on holiday" as now.
 2. **TikTok safe area for everything** (text, emojis, callouts, tags, badges, LinkedIn card):
    - TikTok crops the sides on tall phones (about 100px each side of a 1080px-wide frame).
    - The top has the search bar, the right edge has the like/comment/share buttons, and the bottom has the username, caption and progress bar.
    - Keep all elements inside roughly x 110–940 and y 190–1480 (1080×1920 units), and scale down anything wider.
    - Apply this as a global clamp in the editor so future videos follow it automatically.
+3. **Photo cards (~1:13):** IMG_8395 now starts at 5.3s, with Josh already reaching for a card instead of staring at the backs (done in render.py).
