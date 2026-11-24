@@ -36,7 +36,7 @@ SCRIPT = [
     "{New LinkedIn photo, unlocked.} Would you do this on your next holiday?",
 ]
 CAP_Y, CAP_Y_END = 760, 230
-LOW, HIGH, BEHIND_Y = 1200, 430, 470
+LOW, HIGH, BEHIND_Y = 1330, 430, 470
 # per {phrase}: (lines, emojis, y, behind_person)   None = no callout (handled elsewhere)
 CALLOUTS = [
     ([('POV:', 110, 'l'), ('this is your sign to', 66, 'c'), ('UPDATE YOUR', 120, 'c'), ('LINKEDIN', 200, 'c'),
@@ -45,13 +45,13 @@ CALLOUTS = [
     ([('SOFT', 170, 'l'), ('or', 80, 'c'), ('BOLD?', 200, 'r')], ['💄', '🎨'], LOW, False),
     ([('1 HOUR', 210, 'c'), ('hair + makeup', 80, 'c')], ['💇', '💄'], LOW, False),
     ([('PLAYING', 110, 'l'), ('DRESS UP', 190, 'c'), ('as an adult', 80, 'r')], ['👗', '👠'], LOW, False),
-    ([('TEST', 260, 'c'), ('SHOTS', 260, 'c')], ['📸', '🎬'], BEHIND_Y, True),
+    ([('TEST', 260, 'c'), ('SHOTS', 260, 'c')], ['📸', '🎬'], 650, True),        # she stands in front of it
     ([('POSE', 340, 'c')], ['🙈', '📸'], BEHIND_Y, True),
     ([('THE HARDEST', 130, 'c'), ('PART', 220, 'c')], ['😩', '😭'], LOW, False),
     ([('ONE', 300, 'c')], ['☝️'], LOW, False),
     ([('THREE', 300, 'c')], ['🤭', '💸'], LOW, False),
     ([('SAME', 170, 'l'), ('DAY', 240, 'r')], ['⚡', '📱'], LOW, False),
-    ([('THE ONLY', 120, 'c'), ('IDOL', 260, 'c')], ['🥹', '💛'], LOW, False),
+    ([('THE ONLY', 120, 'c'), ('IDOL', 260, 'c')], ['🥹', '💛'], 1400, False),
     None,                                                     # end card heading instead
 ]
 HIGHLIGHT = {'awkward', 'skirt', 'obviously', 'professional'}
@@ -96,7 +96,7 @@ PLAN = [
      (S(v(7612), 2.0, ss=6, trans='whip'), ('w', 'styles')), (S(v(7609), 1.2, ss=0.5, trans='punch'), ('ph', 4)),
      (S(v(7610), 1.2, ss=1, trans='punch'), None), (S(v(7613), 1.5, ss=2, trans='zoomblur'), ('w', 'professional'))],
     # 5 test shots (text behind her), pants -> skirt
-    [(S(v(7609), 1.2, ss=2, trans='whip'), None), (S(v(7634), 2.5, ss=1, trans='punch'), ('ph', 5)),
+    [(S(v(7609), 1.2, ss=2, trans='whip'), None), (S(v(7634), 2.5, ss=1, zoom=(1.38, 1.46), pan=(0.5, 0.6), trans='punch'), ('ph', 5)),
      (S(v(7625), 1.5, ss=4, trans='whip'), ('w', 'pants')), (S(v(7625), 1.2, ss=8, trans='punch'), ('w', 'flattering')),
      (S(v(7634), 2.0, ss=9, trans='flash'), ('w', 'skirt'))],
     # 6 posing (POSE behind her), friend directed
@@ -161,7 +161,9 @@ def tag_in(label, t0, t1, pos, ch=None, size=44):
 
 # --- captions + callouts ---------------------------------------------------------
 t_finale = idx[(9, 0)]
-kar, _ = build_captions(toks, HIGHLIGHT, y_at=lambda t: CAP_Y_END if t >= t_finale - 0.05 else CAP_Y)
+behind_win = [(p[1] - 0.1, max(p[2] + 1.6, p[1] + 2.2)) for p, co in zip(phrases, CALLOUTS) if co and co[3]]
+cap_y = lambda t: CAP_Y_END if t >= t_finale - 0.05 else 1420 if any(a <= t < b for a, b in behind_win) else CAP_Y
+kar, _ = build_captions(toks, HIGHLIGHT, y_at=cap_y)
 top += kar
 for (txt, p0, p1), co in zip(phrases, CALLOUTS):
     if co is None:
@@ -195,7 +197,7 @@ t_end = idx[(9, 0)]
 card = linkedin_post(v(8002), [('📍', 'Holo Face, Emsphere, Bangkok'), ('📸', 'Professional Portrait · 3 retouched photos'),
                                ('💸', 'THB 3,888'), ('💄', 'hair, makeup, styling + outfits included'),
                                ('⚡', 'edits back the same day')])
-card = card.resize((int(card.width * 0.86), int(card.height * 0.86)), Image.LANCZOS)
+card = card.resize((int(card.width * 0.97), int(card.height * 0.97)), Image.LANCZOS)
 ov.append(Overlay(t_end + 0.3, TOTAL, card, (W / 2, 470 + card.height / 2), 'slide_up', fade_out=False))
 hit('ding', t_end + 0.9, 0.5)
 h1 = sprite_text('NEW PFP', font('bootzy', 110), 'white', 12)
