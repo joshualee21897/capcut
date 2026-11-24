@@ -23,24 +23,24 @@ def v(n):
     raise FileNotFoundError(n)
 
 
-SCRIPT = [
+SCRIPT = [   # as Rochelle recorded it (her ad-libs kept)
     "{POV: this is your sign to update your LinkedIn photo while you're on holiday.}",
     "If you're in Bangkok, book a headshot at {Holo Face.} Here's exactly how it works.",
-    "You check in, and a stylist asks what you're going for: {soft or bold makeup,} your outfit, even your backdrop, so it all comes together.",
-    "Then it's {an hour of hair and makeup,} while you pick from a huge wardrobe of styles and outfits. Basically, {playing dress-up as an adult,} but make it professional.",
-    "Before you lock in your look, you do {test shots} on camera. I started in pants, but it wasn't flattering, so I decided to change into a skirt.",
-    "And if you're awkward in front of the camera like me, they literally {teach you how to pose.} Chin down, shoulders back, and somehow I look like I know what I'm doing.",
-    "After about fifteen minutes of shooting, you pick your photos. {The hardest part.} I booked {one…} and walked out with {three.} Self-control was not part of the package.",
-    "The edits came back {the same day.} In their app, you see the before and after, and message the editor exactly what to change.",
-    "The next day we picked up our prints, and I gave Josh my photo card. Because I'm {the only idol} he has, obviously.",
+    "You check in, and the stylist asks you what you're going for. {Soft or bold look.} Your outfit, even your backdrop, so that it all comes together.",
+    "Then it's {an hour of hair and makeup,} while you pick from a huge wardrobe of styles and outfits. Basically, {playing dress up as an adult,} or even Sims, but make it professional.",
+    "Before you lock in your look, you do {test shots} on camera. I started with pants, but it wasn't flattering, so I decided to change into a skirt.",
+    "And once you're locked in, you start. If you're awkward in front of a camera like me, they literally {teach you how to pose.} Chin down, shoulders back, and somehow I look like I know what I'm doing.",
+    "After about fifteen minutes of shooting, you pick your photos. And that was {the hardest part.} I booked {one photo} and walked out with {three.} Self-control was not part of the package.",
+    "The edits came back {the same day.} In their app, you see the before and after, and you can message the editor exactly what to change. You get a total of three rounds of edits.",
+    "The next day, we picked up our prints, and I gave Josh my photo card, because I'm {the only idol} he has, obviously.",
     "{New LinkedIn photo, unlocked.} Would you do this on your next holiday?",
 ]
 CAP_Y, CAP_Y_END = 760, 230
 LOW, HIGH, BEHIND_Y = 1330, 430, 470
 # per {phrase}: (lines, emojis, y, behind_person)   None = no callout (handled elsewhere)
 CALLOUTS = [
-    ([('POV:', 110, 'c'), ('this is your sign to', 66, 'c'), ('UPDATE YOUR', 120, 'c'),
-      ('LINKEDIN PHOTO', 150, 'c', (255, 255, 255)), ("while you're on holiday", 70, 'c')], ['💼', '📸'], 1230, False),
+    ([('pov: this is your sign to', 78, 'c'), ('update your', 78, 'c'),
+      ('LINKEDIN PHOTO', 140, 'c', (255, 255, 255)), ("while you're on holiday", 70, 'c')], ['💼', '📸'], 1180, False),
     ([('HOLO FACE', 190, 'c')], ['📍', '✨'], LOW, False),
     ([('SOFT', 170, 'l'), ('or', 80, 'c'), ('BOLD?', 200, 'r')], ['💄', '🎨'], LOW, False),
     ([('1 HOUR', 210, 'c'), ('hair + makeup', 80, 'c')], ['💇', '💄'], LOW, False),
@@ -187,10 +187,10 @@ for (txt, p0, p1), co in zip(phrases, CALLOUTS):
 pop('✅', word_t(4, 'skirt') + 0.2, (800, 1150), 190, sound='sparkle', pair='👗')
 pop('❌', word_t(4, 'pants') + 0.2, (800, 1150), 170)
 t_badges = idx[(7, 3)]                                        # three finals as corporate lanyard badges
-for k, (n, ang, x) in enumerate([(8001, 4, 195), (8002, 0, 540), (8003, -4, 885)]):
-    b = lanyard_badge(v(n), w=318, angle=ang)
+for k, (n, ang, x) in enumerate([(8001, 4, 262), (8002, 0, 540), (8003, -4, 818)]):
+    b = lanyard_badge(v(n), w=262, angle=ang)
     t0 = t_badges + 0.15 + 0.45 * k
-    ov.append(Overlay(t0, idx[(8, 0)], b, (x, 1340 - b.height / 2), 'drop', 3 * (1 if k % 2 else -1)))   # cards end above the bottom UI
+    ov.append(Overlay(t0, idx[(8, 0)], b, (x, 1440 - b.height / 2), 'drop', 3 * (1 if k % 2 else -1), safe=False))   # cards inside safe area
     hit('shutter', t0 + 0.3, 0.55)
 pop('😍', t_badges + 1.6, (870, 1480), 170, sound='sparkle', pair='✨')
 for k, (ch, pos, dt) in enumerate([('😘', (820, 560), 0.6), ('💋', (250, 640), 0.9), ('😘', (300, 520), 0.2), ('💋', (830, 640), 0.5)]):

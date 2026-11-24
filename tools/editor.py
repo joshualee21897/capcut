@@ -192,6 +192,7 @@ class Overlay:
     turn: bool = False             # fake left/right turn (horizontal squash) like an animated sticker
     fade_out: bool = True
     behind: bool = False           # drawn BEHIND the person in frame (needs person segmentation)
+    safe: bool = True              # keep inside the TikTok safe area (shrink + nudge if needed)
 
     def draw(self, canvas, t):
         if not (self.t0 <= t < self.t1):
@@ -236,6 +237,14 @@ class Overlay:
             spr = spr.copy()
             spr.putalpha(spr.split()[3].point(lambda v: int(v * alpha)))
         cx, cy = (W / 2, H / 2) if self.full else self.pos
+        if self.safe and not self.full:
+            sx0, sy0, sx1, sy1 = SAFE
+            if spr.width > sx1 - sx0:                        # too wide for the safe area: shrink
+                k = (sx1 - sx0) / spr.width
+                spr = spr.resize((int(spr.width * k), max(1, int(spr.height * k))), Image.BILINEAR)
+            cx = min(max(cx, sx0 + spr.width / 2), sx1 - spr.width / 2)
+            if spr.height < sy1 - sy0:
+                cy = min(max(cy, sy0 + spr.height / 2), sy1 - spr.height / 2)
         x, y = int(cx - spr.width / 2), int(cy - spr.height / 2 + dy)
         canvas.alpha_composite(spr, (max(x, 0), max(y, 0)),
                                (max(-x, 0), max(-y, 0)))
@@ -295,6 +304,7 @@ class Karaoke:
         if not (self.t0 <= t < self.t1):
             return
         x0, y0 = int((W - self.full.width) / 2), int(self.y - self.full.height / 2)
+        x0 = max(x0, SAFE[0] - 30)
         canvas.alpha_composite(self.dim, (x0, y0))
         cut = 0
         for ts, edge in self.edges:
@@ -464,7 +474,11 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
     for ln in lines:
         s_, size, align = ln[:3]
         col = ln[3] if len(ln) > 3 else color
-        sprites.append((sprite_text(s_, font('bootzy', size), col, shadow=14, pad=24), align))
+        sp = sprite_text(s_, font('bootzy', size), col, shadow=14, pad=24)
+        maxw = SAFE[2] - SAFE[0] + 48
+        if sp.width > maxw:
+            sp = sp.resize((maxw, int(sp.height * maxw / sp.width)), Image.LANCZOS)
+        sprites.append((sp, align))
     wmax = max(sp.width for sp, _ in sprites)
     total_h = sum(sp.height - 40 for sp, _ in sprites)
     y = -total_h / 2

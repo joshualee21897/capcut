@@ -45,7 +45,7 @@ Facts: Holo Face, Emsphere mall. Booked 1 photo, upgraded to the 8th-anniversary
 | 11 | Joshua with the photo card in his phone case (8395, 8396) | 🥹💛 |
 | 12 | End card: LinkedIn "I'm happy to share…" post (`endcard_mock.jpg`) with details and reactions | **NEW PFP UNLOCKED** 🔓💼 |
 
-## To do when Rochelle's voiceover arrives
+## Applied with Rochelle's voiceover (done)
 
 1. **Hook text:** "pov: this is your sign to update your" goes on **two lines**, all **lowercase** at the smaller size (line 1 "pov: this is your sign to", line 2 "update your"). Then **LINKEDIN PHOTO** (big, white) and "while you're on holiday" as now.
 2. **TikTok safe area for everything** (text, emojis, callouts, tags, badges, LinkedIn card):
@@ -54,3 +54,9 @@ Facts: Holo Face, Emsphere mall. Booked 1 photo, upgraded to the 8th-anniversary
    - Keep all elements inside roughly x 110–940 and y 190–1480 (1080×1920 units), and scale down anything wider.
    - Apply this as a global clamp in the editor so future videos follow it automatically.
 3. **Photo cards (~1:13):** IMG_8395 now starts at 5.3s, with Josh already reaching for a card instead of staring at the backs (done in render.py).
+
+**Voiceover clean-up:**
+- Kept the second "test shots" take, which includes "on camera".
+- Dropped the "picked up our edits… sorry" fumble.
+- Kept her ad-libs: "or even Sims", "and once you're locked in, you start", "three rounds of edits".
+- Ran the clean-up with `--keep 0:35.5 --keep 39.3:82.6 --keep 88.3:999`.

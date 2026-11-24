@@ -8,6 +8,9 @@ BUTTER = (255, 236, 150)          # #FFEC96 lighter butter yellow
 CREAM = (255, 250, 235)
 INK = (40, 36, 30)
 W, H = 1080, 1920
+# TikTok safe area (1080x1920 units): sides get cropped on tall phones, top = search bar,
+# right = like/comment/share rail, bottom = username/caption/progress bar
+SAFE = (110, 190, 940, 1480)          # x0, y0, x1, y1
 
 EMOJI_CODES = {'📍': '1f4cd', '💸': '1f4b8', '🧵': '1f9f5', '🗓': '1f5d3', '✅': '2705', '✨': '2728',
                '🤵': '1f935', '💍': '1f48d', '🦩': '1f9a9', '🍺': '1f37a', '😍': '1f60d', '🎉': '1f389',
