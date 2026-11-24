@@ -42,7 +42,7 @@ CALLOUTS = [
     ([('pov: this is your sign to', 78, 'c'), ('update your', 78, 'c'),
       ('LINKEDIN PHOTO', 140, 'c', (255, 255, 255)), ("while you're on holiday", 70, 'c')], ['💼', '📸'], 1180, False),
     ([('HOLO FACE', 190, 'c')], ['📍', '✨'], LOW, False),
-    ([('SOFT', 170, 'l'), ('or', 80, 'c'), ('BOLD?', 200, 'r')], ['💄', '🎨'], LOW, False),
+    ([('SOFT', 170, 'l'), ('or', 80, 'c'), ('BOLD?', 200, 'r')], ['💄', '🎨'], 1290, False),
     ([('1 HOUR', 210, 'c'), ('hair + makeup', 80, 'c')], ['💇', '💄'], LOW, False),
     ([('PLAYING', 110, 'l'), ('DRESS UP', 190, 'c'), ('as an adult', 80, 'r')], ['👗', '👠'], LOW, False),
     ([('TEST', 260, 'c'), ('SHOTS', 260, 'c')], ['📸', '🎬'], 650, True),        # she stands in front of it
@@ -51,7 +51,7 @@ CALLOUTS = [
     ([('ONE', 300, 'c')], ['☝️'], LOW, False),
     ([('THREE', 300, 'c')], ['🤭', '💸'], LOW, False),
     ([('SAME', 170, 'l'), ('DAY', 240, 'r')], ['⚡', '📱'], LOW, False),
-    ([('THE ONLY', 120, 'c'), ('IDOL', 260, 'c')], ['🥹', '💛'], 1400, False),
+    ([('THE ONLY', 120, 'c'), ('IDOL', 260, 'c')], ['🥹', '💛'], 1270, False),   # whole block inside the safe area
     None,                                                     # end card heading instead
 ]
 HIGHLIGHT = {'awkward', 'skirt', 'obviously', 'professional'}
@@ -173,7 +173,7 @@ for (txt, p0, p1), co in zip(phrases, CALLOUTS):
     end = max(p1 + 0.7, p0 + 1.4) if not behind else max(p1 + 1.6, p0 + 2.2)
     if txt.startswith('POV'):
         end = para_end[0] - 0.05
-    parts = callout_lines(lines, ch, emoji_size=150 if not behind else 170, gap=4 if txt.lower().startswith('the only') else 40)
+    parts = callout_lines(lines, ch, emoji_size=150 if not behind else 170, gap=-6 if txt.lower().startswith('the only') else 40)
     for i, (spr, (dx, dy)) in enumerate(parts):
         is_emoji = i >= len(lines)
         t0 = p0 + 0.12 * i + (0.05 if is_emoji else 0)
