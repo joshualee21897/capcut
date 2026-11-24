@@ -173,7 +173,7 @@ for (txt, p0, p1), co in zip(phrases, CALLOUTS):
     end = max(p1 + 0.7, p0 + 1.4) if not behind else max(p1 + 1.6, p0 + 2.2)
     if txt.startswith('POV'):
         end = para_end[0] - 0.05
-    parts = callout_lines(lines, ch, emoji_size=150 if not behind else 170)
+    parts = callout_lines(lines, ch, emoji_size=150 if not behind else 170, gap=4 if txt.lower().startswith('the only') else 40)
     for i, (spr, (dx, dy)) in enumerate(parts):
         is_emoji = i >= len(lines)
         t0 = p0 + 0.12 * i + (0.05 if is_emoji else 0)
@@ -187,10 +187,10 @@ for (txt, p0, p1), co in zip(phrases, CALLOUTS):
 pop('✅', word_t(4, 'skirt') + 0.2, (800, 1150), 190, sound='sparkle', pair='👗')
 pop('❌', word_t(4, 'pants') + 0.2, (800, 1150), 170)
 t_badges = idx[(7, 3)]                                        # three finals as corporate lanyard badges
-for k, (n, ang, x) in enumerate([(8001, 4, 262), (8002, 0, 540), (8003, -4, 818)]):
-    b = lanyard_badge(v(n), w=262, angle=ang)
+for k, (n, ang, x, bw) in enumerate([(8001, 4, 228, 215), (8003, -4, 852, 215), (8002, 0, 540, 360)]):   # big one centre, in front
+    b = lanyard_badge(v(n), w=bw, angle=ang)
     t0 = t_badges + 0.15 + 0.45 * k
-    ov.append(Overlay(t0, idx[(8, 0)], b, (x, 1440 - b.height / 2), 'drop', 3 * (1 if k % 2 else -1), safe=False))   # cards inside safe area
+    ov.append(Overlay(t0, idx[(8, 0)], b, (x, (1440 if bw > 300 else 1330) - b.height / 2), 'drop', 3 * (1 if k % 2 else -1), safe=False))   # cards inside safe area
     hit('shutter', t0 + 0.3, 0.55)
 pop('😍', t_badges + 1.6, (870, 1480), 170, sound='sparkle', pair='✨')
 for k, (ch, pos, dt) in enumerate([('😘', (820, 560), 0.6), ('💋', (250, 640), 0.9), ('😘', (300, 520), 0.2), ('💋', (830, 640), 0.5)]):
@@ -205,16 +205,16 @@ t_end = idx[(9, 0)]
 card = linkedin_post(v(8002), [('📍', 'Holo Face, Emsphere, Bangkok'), ('📸', 'Professional Portrait · 3 retouched photos'),
                                ('💸', 'THB 3,888'), ('💄', 'hair, makeup, styling + outfits included'),
                                ('⚡', 'edits back the same day')])
-k = min((SAFE[2] - SAFE[0]) / card.width, (SAFE[3] - 470) / card.height)   # fit below the heading, inside safe area
+k = min((SAFE[2] - SAFE[0]) / card.width, (SAFE[3] - 590) / card.height)   # fit below the heading, inside safe area
 card = card.resize((int(card.width * k), int(card.height * k)), Image.LANCZOS)
-ov.append(Overlay(t_end + 0.3, TOTAL, card, (W / 2, 470 + card.height / 2), 'slide_up', fade_out=False))
+ov.append(Overlay(t_end + 0.3, TOTAL, card, (W / 2, 590 + card.height / 2), 'slide_up', fade_out=False))
 hit('ding', t_end + 0.9, 0.5)
 h1 = sprite_text('NEW PFP', font('bootzy', 110), 'white', 12)
 h2 = sprite_text('UNLOCKED', font('bootzy', 125), BUTTER, 12)
-ov.append(Overlay(t_end + 0.1, TOTAL, h1, (W / 2 - 70, 300), 'bounce', fade_out=False))
-ov.append(Overlay(t_end + 0.25, TOTAL, h2, (W / 2 + 50, 395), 'bounce', fade_out=False))
-ov.append(Overlay(t_end + 0.45, TOTAL, sticker('🔓', 110), (870, 300), 'bounce', 8, fade_out=False))
-ov.append(Overlay(t_end + 0.55, TOTAL, sticker('💼', 100), (130, 440), 'bounce', -8, fade_out=False))
+ov.append(Overlay(t_end + 0.1, TOTAL, h1, (W / 2 - 70, 415), 'bounce', fade_out=False))
+ov.append(Overlay(t_end + 0.25, TOTAL, h2, (W / 2 + 50, 510), 'bounce', fade_out=False))
+ov.append(Overlay(t_end + 0.45, TOTAL, sticker('🔓', 110), (870, 415), 'bounce', 8, fade_out=False))
+ov.append(Overlay(t_end + 0.55, TOTAL, sticker('💼', 100), (140, 555), 'bounce', -8, fade_out=False))
 hit('thud', t_end + 0.1, 0.5)
 hit('pop', t_end + 0.45, 0.4)
 

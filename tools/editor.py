@@ -466,7 +466,7 @@ def _mux(silent, total, sfx, og_audio, out_path, vo_path):
 
 
 # ----------------------------------------------------------------------------- emphasis callouts
-def callout_lines(lines, ch=None, color=None, emoji_size=150):
+def callout_lines(lines, ch=None, color=None, emoji_size=150, gap=40):
     """Big Bootzy emphasis text in mixed sizes, e.g. [('THIS', 90, 'l'), ('GIANT', 240, 'c'), ('TOAD', 110, 'r')].
     Returns [(sprite, (cx, cy) offset from block centre)] so each line can animate in separately."""
     color = color or BUTTER
@@ -480,11 +480,11 @@ def callout_lines(lines, ch=None, color=None, emoji_size=150):
             sp = sp.resize((maxw, int(sp.height * maxw / sp.width)), Image.LANCZOS)
         sprites.append((sp, align))
     wmax = max(sp.width for sp, _ in sprites)
-    total_h = sum(sp.height - 40 for sp, _ in sprites)
+    total_h = sum(sp.height - gap for sp, _ in sprites)
     y = -total_h / 2
     out = []
     for sp, align in sprites:
-        h = sp.height - 40
+        h = sp.height - gap
         dx = {'l': -(wmax - sp.width) / 2, 'r': (wmax - sp.width) / 2}.get(align, 0)
         out.append((sp, (dx, y + h / 2)))
         y += h
