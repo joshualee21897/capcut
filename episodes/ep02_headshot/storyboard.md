@@ -4,7 +4,7 @@ Standalone video, not part of the abroad series. AbsolutLEE look: Bootzy callout
 
 Reference: Holo Face reel. Big bold words in mixed sizes, some words behind the person, a cut about every second.
 
-## Voiceover script (Rochelle), about 60–65s
+## Voiceover script (Rochelle, final edits)
 
 > POV: this is your sign to update your LinkedIn photo while you're on holiday.
 >
@@ -12,19 +12,21 @@ Reference: Holo Face reel. Big bold words in mixed sizes, some words behind the 
 >
 > You check in, and a stylist asks what you're going for: soft or bold makeup, your outfit, even your backdrop, so it all comes together.
 >
-> Then an hour of hair and makeup, while you pick from a huge wardrobe of styles and outfits.
+> Then it's an hour of hair and makeup, while you pick from a huge wardrobe of styles and outfits. Basically, playing dress-up as an adult, but make it professional.
 >
-> Before you lock in your look, you do test shots on camera. I started in pants, but it wasn't flattering, so my stylist switched me into a skirt.
+> Before you lock in your look, you do test shots on camera. I started in pants, but it wasn't flattering, so I decided to change into a skirt.
 >
-> And if you're awkward in front of the camera like me, they literally teach you how to pose.
+> And if you're awkward in front of the camera like me, they literally teach you how to pose. Chin down, shoulders back, and somehow I look like I know what I'm doing.
 >
-> After about fifteen minutes of shooting, you pick your photos. The hardest part. I booked one, and upgraded to three on the spot.
+> After about fifteen minutes of shooting, you pick your photos. The hardest part. I booked one… and walked out with three. Self-control was not part of the package.
 >
 > The edits came back the same day. In their app, you see the before and after, and message the editor exactly what to change.
 >
-> The next day we picked up our prints, and I gave Josh my photo card.
+> The next day we picked up our prints, and I gave Josh my photo card. Because I'm the only idol he has, obviously.
 >
 > New LinkedIn photo, unlocked. Would you do this on your next holiday?
+
+Facts: Holo Face, Emsphere mall. Booked 1 photo, upgraded to the 8th-anniversary 3-photo package, THB 3,888 total.
 
 ## Beats
 

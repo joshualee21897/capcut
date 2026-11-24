@@ -9,6 +9,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageOps, ImageFilter, ImageDraw, ImageEnhance
 from style import *
+try:
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+except ImportError:
+    pass
 
 FPS = 30
 SCALE = int(os.environ.get('EDIT_SCALE', '2'))      # 2 = 4K output (2160x3840); layout stays in 1080 units
@@ -89,7 +94,7 @@ class FrameSource:
         self.still = None
         if callable(shot.src):
             self.gen = shot.src
-        elif ext in ('.jpg', '.jpeg', '.png'):
+        elif ext in ('.jpg', '.jpeg', '.png', '.heic'):
             self.still = self._photo(shot.src, shot.photo_style)
         else:
             p = _proxy(shot)
@@ -150,6 +155,20 @@ def _zoom(im, s, pan=(0.5, 0.5), dx=0):
     return im.resize((OW, OH), Image.BILINEAR, box=(x0, y0, x0 + cw, y0 + ch))
 
 
+_SEG = None
+
+
+def person_mask(im):
+    """Soft alpha mask of the person in an RGB frame (u2net_human_seg on a small copy, upscaled)."""
+    global _SEG
+    from rembg import remove, new_session
+    if _SEG is None:
+        _SEG = new_session('u2net_human_seg')
+    small = im.resize((im.width // 4, im.height // 4))
+    m = remove(small, session=_SEG, only_mask=True)
+    return m.resize(im.size, Image.BILINEAR).filter(ImageFilter.GaussianBlur(2))
+
+
 def ease_out_back(x, k=1.70158):
     x -= 1
     return 1 + (k + 1) * x ** 3 + k * x ** 2
@@ -167,6 +186,7 @@ class Overlay:
     full: bool = False             # full-frame layer (pos ignored)
     turn: bool = False             # fake left/right turn (horizontal squash) like an animated sticker
     fade_out: bool = True
+    behind: bool = False           # drawn BEHIND the person in frame (needs person segmentation)
 
     def draw(self, canvas, t):
         if not (self.t0 <= t < self.t1):
@@ -367,10 +387,26 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
         if sh.trans == 'flash' and lt < 0.18:
             im = Image.blend(im, white, 1 - lt / 0.18)
         render._last = im
+        behind = [o for o in overlays if o.behind and o.t0 <= t < o.t1]
+        if behind:                                   # big words behind the person
+            bl = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+            for o in behind:
+                o.draw(bl, t)
+            bb = bl.getbbox()
+            if bb:
+                person = im.copy()
+                mask = person_mask(person)
+                reg = bl.crop(bb)
+                if SCALE != 1:
+                    reg = reg.resize((reg.width * SCALE, reg.height * SCALE), Image.BICUBIC)
+                im = im.copy()
+                im.paste(reg, (bb[0] * SCALE, bb[1] * SCALE), reg)
+                im.paste(person, (0, 0), mask)
         # overlays are laid out in 1080-wide units, then scaled up onto the 4K frame
         ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
         for o in overlays:
-            o.draw(ov, t)
+            if not o.behind:
+                o.draw(ov, t)
         bb = ov.getbbox()
         if bb:
             reg = ov.crop(bb)
@@ -601,3 +637,15 @@ def build_captions(toks, highlight=(), max_chars=32, y=1400, size=44, y_at=None)
         yy = y_at(ln[0]['s']) if y_at else y
         kar.append(Karaoke([(x['w'], x['s']) for x in ln], end, yy, size, highlight))
     return kar, [(' '.join(p[0]), p[1], p[2]) for _, p in sorted(phrases.items())]
+
+
+def synthetic_vo_words(paragraphs, wps=2.7, gap_end=0.35, gap_comma=0.15):
+    """Placeholder word timings from the script (before a voiceover exists), in vo_clean.json format."""
+    import re
+    words, t = [], 0.25
+    for para in paragraphs:
+        for w in re.sub(r'[{}]', '', para).split():
+            d = max(0.18, 0.06 * len(w) + 0.12) / (wps / 2.7)
+            words.append(dict(w=w, s=round(t, 3), e=round(t + d, 3)))
+            t += d + (gap_end if w.endswith(('.', '?', '!', '…')) else gap_comma if w.endswith((',', ':')) else 0.02)
+    return words, t
