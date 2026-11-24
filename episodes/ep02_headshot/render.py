@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
 from editor import *
-from linkedin import linkedin_post
+from linkedin import linkedin_post, lanyard_badge
 
 F = '/home/user/footage_ep2/'
 VO_DIR = '/home/user/vo_ep2/'
@@ -85,7 +85,7 @@ PLAN = [
      (S(v(8001), 1.2, zoom=(1.0, 1.06), trans='flash'), None)],
     # 2 holo face
     [(S(v(7669), 1.5, ss=0, trans='whip'), None), (S(v(7600), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(v(7602), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(v(7670), 2.0, ss=1, trans='whip'), ('w', 'heres'))],
+     (S(v(7602), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(v(7603), 2.0, ss=0, trans='whip'), ('w', 'heres'))],
     # 3 check-in, style chat, backdrop
     [(S(v(7668), 1.3, ss=1, trans='zoomblur'), None), (S(v(7668), 1.2, ss=6, trans='punch'), None),
      (S(v(7614), 1.5, ss=1, trans='punch'), ('ph', 2)),
@@ -96,25 +96,25 @@ PLAN = [
      (S(v(7612), 2.0, ss=6, trans='whip'), ('w', 'styles')), (S(v(7609), 1.2, ss=0.5, trans='punch'), ('ph', 4)),
      (S(v(7610), 1.2, ss=1, trans='punch'), None), (S(v(7613), 1.5, ss=2, trans='zoomblur'), ('w', 'professional'))],
     # 5 test shots (text behind her), pants -> skirt
-    [(S(v(7609), 1.2, ss=2, trans='whip'), None), (S(v(7634), 2.5, ss=1, zoom=(1.38, 1.46), pan=(0.5, 0.6), trans='punch'), ('ph', 5)),
-     (S(v(7625), 1.5, ss=4, trans='whip'), ('w', 'pants')), (S(v(7625), 1.2, ss=8, trans='punch'), ('w', 'flattering')),
+    [(S(v(7625), 2.5, ss=4.5, zoom=(1.1, 1.18), trans='punch'), None),                  # pants test shot first (full length)
+     (S(v(7625), 1.5, ss=7.5, trans='whip'), ('w', 'pants')), (S(v(7625), 1.2, ss=10, trans='punch'), ('w', 'flattering')),
      (S(v(7634), 2.0, ss=9, trans='flash'), ('w', 'skirt'))],
     # 6 posing (POSE behind her), friend directed
-    [(S(v(7658), 1.5, ss=0, trans='whip'), None), (S(v(7659), 1.5, ss=1, trans='punch'), ('w', 'like')),
-     (S(v(7636), 2.5, ss=6, trans='punch'), ('ph', 6)),
-     (S(v(7660), 1.8, ss=2, trans='zoomblur'), ('w', 'chin')), (S(v(7634), 2.0, ss=25, trans='punch'), ('w', 'somehow')),
-     (S(v(7663), 1.5, ss=10, trans='whip'), None)],
+    [(S(v(7634), 2.0, ss=5, zoom=(1.15, 1.2), trans='whip'), None),
+     (S(v(7634), 2.5, ss=11, zoom=(1.38, 1.46), pan=(0.5, 0.6), trans='punch'), ('ph', 6)),
+     (S(v(7634), 1.8, ss=21, zoom=(1.2, 1.28), trans='zoomblur'), ('w', 'chin')),
+     (S(v(7634), 2.0, ss=26, zoom=(1.15, 1.2), trans='punch'), ('w', 'somehow')),
+     (S(v(7635), 1.5, ss=1, trans='whip'), None)],
     # 7 picking photos, one -> three
     [(S(v(7635), 1.5, ss=3, trans='zoomblur'), None), (S(v(7635), 1.5, ss=10, trans='punch'), ('w', 'shooting')),
      (S(F + 'camphoto_1594243340.jpg', 1.5, zoom=(1.0, 1.08), trans='punch'), ('w', 'pick')),
      (S(v(7664), 2.0, ss=8, trans='whip'), ('ph', 7)), (S(v(7664), 1.5, ss=15, trans='punch'), ('ph', 8)),
-     (S(v(7635), 1.5, ss=15, trans='flash'), ('ph', 9)), (S(v(7671), 1.5, ss=2, trans='whip'), ('w', 'selfcontrol')),
-     (S(v(7670), 1.2, ss=5, trans='punch'), ('w', 'package'))],
+     (S(v(7635), 1.5, ss=15, trans='flash'), ('ph', 9)), (S(v(7671), 1.5, ss=3.5, trans='whip'), ('w', 'selfcontrol')),
+     (S(v(7671), 1.2, ss=13.5, trans='punch'), ('w', 'package'))],
     # 8 same-day edits in the app, then the reveal of the three finals
     [(S(v(7996), 1.3, zoom=(1.0, 1.06), trans='slide'), None), (S(v(7998), 1.2, zoom=(1.0, 1.06), trans='punch'), ('w', 'in')),
      (S(v(7997), 1.2, zoom=(1.0, 1.06), trans='punch'), ('w', 'before')),
-     (S(v(8001), 1.3, zoom=(1.0, 1.06), trans='flash'), ('w', 'message')), (S(v(8002), 1.3, zoom=(1.0, 1.06), trans='flash'), None),
-     (S(v(8003), 1.3, zoom=(1.0, 1.06), trans='flash'), None)],
+     (S(v(7634), 3.9, ss=1, soft=0.4, zoom=(1.0, 1.05), trans='flash'), ('w', 'message'))],     # badges on top
     # 9 prints + photo card for Josh
     [(S(v(8395), 2.0, ss=1, trans='whip'), None), (S(v(8395), 2.0, ss=10, trans='punch'), ('w', 'gave')),
      (S(v(8396), 2.5, ss=3, trans='punch'), ('w', 'because')), (S(v(8396), 1.5, ss=12, trans='zoomblur'), ('w', 'obviously'))],
@@ -185,9 +185,13 @@ for (txt, p0, p1), co in zip(phrases, CALLOUTS):
 # --- beats --------------------------------------------------------------------------
 pop('✅', word_t(4, 'skirt') + 0.2, (800, 1150), 190, sound='sparkle', pair='👗')
 pop('❌', word_t(4, 'pants') + 0.2, (800, 1150), 170)
-for k in (3, 4, 5):                                           # reveal: shutter + sparkle on each final photo
-    hit('shutter', idx[(7, k)], 0.55)
-pop('😍', idx[(7, 3)] + 0.4, (860, 1250), 180, sound='sparkle', pair='✨')
+t_badges = idx[(7, 3)]                                        # three finals as corporate lanyard badges
+for k, (n, ang, x) in enumerate([(8001, 4, 195), (8002, 0, 540), (8003, -4, 885)]):
+    b = lanyard_badge(v(n), w=318, angle=ang)
+    t0 = t_badges + 0.15 + 0.45 * k
+    ov.append(Overlay(t0, idx[(8, 0)], b, (x, 1340 - b.height / 2), 'drop', 3 * (1 if k % 2 else -1)))   # cards end above the bottom UI
+    hit('shutter', t0 + 0.3, 0.55)
+pop('😍', t_badges + 1.6, (870, 1480), 170, sound='sparkle', pair='✨')
 tag_in('emsphere, bangkok', idx[(1, 0)] + 0.3, idx[(1, 3)], (W / 2, 560), '📍')
 tag_in('1 photo booked', ph_t(8) + 0.2, ph_t(9) - 0.05, (W / 2, 560), '📸')
 tag_in('3 photos taken home', ph_t(9) + 0.2, ph_t(9) + 2.0, (W / 2, 560), '📸')
