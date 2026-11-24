@@ -44,3 +44,12 @@ Facts: Holo Face, Emsphere mall. Booked 1 photo, upgraded to the 8th-anniversary
 | 10 | Reveal: the 3 final photos (8001–8003), each with a flash, shutter sound and zoom | ✨😍 |
 | 11 | Joshua with the photo card in his phone case (8395, 8396) | 🥹💛 |
 | 12 | End card: LinkedIn "I'm happy to share…" post (`endcard_mock.jpg`) with details and reactions | **NEW PFP UNLOCKED** 🔓💼 |
+
+## To do when Rochelle's voiceover arrives
+
+1. **Hook text:** "pov: this is your sign to update your" goes on **two lines**, all in small caps (line 1 "pov: this is your sign to", line 2 "update your"). Then **LINKEDIN PHOTO** (big, white) and "while you're on holiday" as now.
+2. **TikTok safe area for everything** (text, emojis, callouts, tags, badges, LinkedIn card):
+   - TikTok crops the sides on tall phones (about 100px each side of a 1080px-wide frame).
+   - The top has the search bar, the right edge has the like/comment/share buttons, and the bottom has the username, caption and progress bar.
+   - Keep all elements inside roughly x 110–940 and y 190–1480 (1080×1920 units), and scale down anything wider.
+   - Apply this as a global clamp in the editor so future videos follow it automatically.
