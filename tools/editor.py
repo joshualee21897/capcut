@@ -690,3 +690,28 @@ def synthetic_vo_words(paragraphs, wps=2.7, gap_end=0.35, gap_comma=0.15):
             words.append(dict(w=w, s=round(t, 3), e=round(t + d, 3)))
             t += d + (gap_end if w.endswith(('.', '?', '!', '…')) else gap_comma if w.endswith((',', ':')) else 0.02)
     return words, t
+
+
+def no_signal_frame(t, seed=0):
+    """Blooper 'no signal' screen: SMPTE-style colour bars with wobble, static, rolling band (OW x OH)."""
+    rng = np.random.default_rng(seed + int(t * 60))
+    w, h = OW // 4, OH // 4
+    top = [(192, 192, 192), (192, 192, 0), (0, 192, 192), (0, 192, 0), (192, 0, 192), (192, 0, 0), (0, 0, 192)]
+    mid = [(0, 0, 192), (19, 19, 19), (192, 0, 192), (19, 19, 19), (0, 192, 192), (19, 19, 19), (192, 192, 192)]
+    a = np.zeros((h, w, 3), np.uint8)
+    bw = w / 7
+    for i in range(7):
+        x0, x1 = int(i * bw), int((i + 1) * bw)
+        a[:int(h * 0.67), x0:x1] = top[i]
+        a[int(h * 0.67):int(h * 0.75), x0:x1] = mid[i]
+    for i, c in enumerate([(0, 33, 76), (255, 255, 255), (50, 0, 106), (19, 19, 19)]):
+        a[int(h * 0.75):, int(i * w / 4):int((i + 1) * w / 4)] = c
+    for y in range(h):                                       # horizontal wobble / tearing
+        off = int(6 * np.sin(y / 9 + t * 40) + (rng.integers(-25, 25) if rng.random() < 0.04 else 0))
+        a[y] = np.roll(a[y], off, axis=0)
+    roll = int((t * 1.7 % 1) * h)                            # rolling dark band
+    a[roll:roll + h // 14] = (a[roll:roll + h // 14] * 0.55).astype(np.uint8)
+    noise = rng.integers(0, 90, (h, w, 1), dtype=np.uint8)   # static
+    a = np.clip(a.astype(np.int16) + noise - 45, 0, 255).astype(np.uint8)
+    a[::3] = (a[::3] * 0.8).astype(np.uint8)                 # scanlines
+    return Image.fromarray(a).resize((OW, OH), Image.NEAREST)

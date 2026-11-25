@@ -48,7 +48,7 @@ CALLOUTS_B = [
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
-HOOK = (B + 'IMG_8838.MOV', 32.5, 38.7)
+HOOK = (BURGER_CLIP, 21.4, 23.9)                         # facepalm: 'didn't you take out the entire burger?' (2.5s)
 HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
        (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
 HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
@@ -130,12 +130,12 @@ add_reaction(*HOOK)
 ov.append(Overlay(0.2, HOOK[2] - HOOK[1], sprite_tag('proposing to our bridal party', 40, '💍'), (W / 2, 300), 'bounce'))
 hit('click', 0.2, 0.5)
 
-# 2 glitch rewind
+# 2 blooper 'no signal' glitch (colour bars + beep) straight after the hook
 t_g = now()
-shots.append(S(HOOK[0], 0.9, ss=HOOK[1] + 0.5, speed=-6.0, glitch=1.0, zoom=(1.05, 1.0)))
-ov.append(Overlay(t_g + 0.05, t_g + 0.9, sprite_tag('ok let\'s rewind', 44, '⏪'), (W / 2, 900), 'pop'))
-hit('rewind', t_g, 0.6)
-hit('glitch', t_g + 0.5, 0.5)
+shots.append(S(HOOK[0], 0.12, ss=HOOK[2] - 0.1, glitch=1.5, zoom=(1.0, 1.0)))      # frame tears first
+shots.append(S(lambda t: no_signal_frame(t), 0.7, zoom=(1.0, 1.0)))
+hit('glitch', t_g, 0.5)
+hit('beep', t_g + 0.12, 0.55)
 
 # 3 voiceover A over placeholders (your filmed clips go here)
 PLAN_A = [
