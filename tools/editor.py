@@ -35,6 +35,7 @@ class Shot:
     photo_style: str = 'fill'      # fill | polaroid (for stills)
     pan: tuple = (0.5, 0.5)        # zoom centre (fraction of frame)
     soft: float = 0.0              # >0: dim + soften (background under a photo/card)
+    glitch: float = 0.0            # >0: RGB-split / band-shift glitch strength over the whole shot
 
 
 def _probe_color(src):
@@ -84,9 +85,11 @@ def _proxy(shot):
         return out
     pre = TONEMAP if _probe_color(shot.src) in ('arib-std-b67', 'smpte2084') else ''
     eq = _grade(shot.src, shot.ss + min(shot.dur, 2) / 2, pre)
-    src_len = 0.05 if shot.freeze else shot.dur * shot.speed + 0.2
-    vf = (pre + f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos,crop={OW}:{OH},'
-          f'setpts=PTS/{shot.speed},fps={FPS},{eq},{FILM}')
+    sp = abs(shot.speed)
+    src_len = 0.05 if shot.freeze else shot.dur * sp + 0.2
+    rev = 'reverse,' if shot.speed < 0 else ''
+    vf = (pre + rev + f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos,crop={OW}:{OH},'
+          f'setpts=PTS/{sp},fps={FPS},{eq},{FILM}')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{shot.ss:.3f}', '-t', f'{src_len:.3f}', '-i', shot.src,
                     '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', str(out)], check=True)
     return out
@@ -172,6 +175,21 @@ def person_mask(im):
     small = im.resize((im.width // 4, im.height // 4))
     m = remove(small, session=_SEG, only_mask=True)
     return m.resize(im.size, Image.BILINEAR).filter(ImageFilter.GaussianBlur(2))
+
+
+def glitch_frame(im, strength, seed):
+    """Digital glitch: RGB channel split, shifted horizontal bands, scanlines."""
+    rng = np.random.default_rng(seed)
+    a = np.asarray(im).copy()
+    k = int(18 * strength * SCALE) + 1
+    a[:, :, 0] = np.roll(a[:, :, 0], k, axis=1)
+    a[:, :, 2] = np.roll(a[:, :, 2], -k, axis=1)
+    h = a.shape[0]
+    for _ in range(int(6 * strength) + 2):
+        y0 = int(rng.integers(0, h - 10)); bh = int(rng.integers(8, 90)) * SCALE
+        a[y0:y0 + bh] = np.roll(a[y0:y0 + bh], int(rng.integers(-80, 80)) * SCALE, axis=1)
+    a[::4 * SCALE] = (a[::4 * SCALE] * 0.7).astype(np.uint8)
+    return Image.fromarray(a)
 
 
 def ease_out_back(x, k=1.70158):
@@ -399,6 +417,8 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
             im = frame
         if sh.soft:
             im = ImageEnhance.Brightness(im.resize((OW // 8, OH // 8)).resize((OW, OH), Image.BILINEAR)).enhance(1 - sh.soft)
+        if sh.glitch:
+            im = glitch_frame(im, sh.glitch, n)
         if sh.trans == 'flash' and lt < 0.18:
             im = Image.blend(im, white, 1 - lt / 0.18)
         render._last = im

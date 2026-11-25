@@ -2,7 +2,7 @@
 
 Target length: about 60–75s. Same look as the other AbsolutLEE videos: Bootzy callouts, eye-level karaoke captions without punctuation, iOS emoji pairs, light film look, TikTok safe area. Sound effects only on events.
 
-Format: the voiceover (Rochelle + Joshua taking turns) explains the thought behind the gifts, then the real reactions play with their own audio and short captions of the funny lines. Optional: a small green-screen cutout of the two of them in a bottom corner during the "his vs her" banter (see questions).
+Format (updated): **hook = best reaction (bridesman 'not gonna get down on one knee… there's a ring there') → glitch rewind → both of you explain the idea on camera / voiceover → full reactions (her side, then his) → Smiski → scorecard.** The voiceover (Rochelle + Joshua taking turns) explains the thought behind the gifts, then the real reactions play with their own audio and short captions of the funny lines. Optional: a small green-screen cutout of the two of them in a bottom corner during the "his vs her" banter (see questions).
 
 ## Rules from Rochelle
 - Friends are OK to show.
