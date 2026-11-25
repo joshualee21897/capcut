@@ -462,9 +462,10 @@ def _mux(silent, total, sfx, og_audio, out_path, vo_path):
     # audio: silence bed + og snippets + sfx (+ vo)
     inputs, filters, labels = ['-f', 'lavfi', '-t', f'{total:.3f}', '-i', 'anullsrc=r=44100:cl=stereo'], [], ['[1:a]']
     k = 2                                           # input 0 = video, 1 = silence bed
-    for path, ss, dur, at, vol in og_audio:
+    for path, ss, dur, at, vol, *extra in og_audio:
         inputs += ['-ss', f'{ss}', '-t', f'{dur}', '-i', path]
-        filters.append(f'[{k}:a]volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'
+        pre = (extra[0] + ',') if extra and extra[0] else ''
+        filters.append(f'[{k}:a]{pre}volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'
                        f'adelay={int(at * 1000)}|{int(at * 1000)}[a{k}]')
         labels.append(f'[a{k}]')
         k += 1
@@ -715,3 +716,23 @@ def no_signal_frame(t, seed=0):
     a = np.clip(a.astype(np.int16) + noise - 45, 0, 255).astype(np.uint8)
     a[::3] = (a[::3] * 0.8).astype(np.uint8)                 # scanlines
     return Image.fromarray(a).resize((OW, OH), Image.NEAREST)
+
+
+# speech-focus filter for clips with background chatter / laughter (best effort, keeps the main voice)
+VOICE_FOCUS = ('highpass=f=180,lowpass=f=6500,afftdn=nr=18:nf=-32:tn=1,'
+               'agate=threshold=0.05:ratio=5:attack=4:release=180,acompressor=threshold=-18dB:ratio=3:makeup=2')
+
+
+def collage_clip(tiles, dur, out_name):
+    """2x2 video collage (each tile graded + film look via _proxy). tiles = [(src, ss)], returns mp4 path."""
+    paths = [_proxy(Shot(src, dur, ss=ss)) for src, ss in tiles]
+    out = CACHE / out_name
+    tw, th = OW // 2, OH // 2
+    inp, fc = [], []
+    for i, p_ in enumerate(paths):
+        inp += ['-i', str(p_)]
+        fc.append(f'[{i}:v]scale={tw}:{th}:force_original_aspect_ratio=increase,crop={tw}:{th},setsar=1[v{i}]')
+    fc.append(''.join(f'[v{i}]' for i in range(4)) + f'xstack=inputs=4:layout=0_0|w0_0|0_h0|w0_h0[out]')
+    subprocess.run(['ffmpeg', '-y', '-v', 'error'] + inp + ['-filter_complex', ';'.join(fc), '-map', '[out]',
+                    '-t', f'{dur}', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', str(out)], check=True)
+    return out

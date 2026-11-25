@@ -32,7 +32,7 @@ SCRIPT_A = [   # R = Rochelle, J = Joshua (draft: placeholder timing until the V
 SCRIPT_B = [
     "But we both snuck in one thing. {A Smiski.} A ring for my side,",
     "and a luggage tag for mine.",
-    "So, {whose side would you rather be on?}",
+    "And {they all said yes.}",
 ]
 CALLOUTS_A = [
     ([('GIANT', 150, 'l'), ('BURGER', 210, 'r')], ['🍔', '😂']),
@@ -43,12 +43,12 @@ CALLOUTS_A = [
 ]
 CALLOUTS_B = [
     ([('SMISKI', 210, 'c'), ('for everyone', 80, 'c')], ['💍', '🧳']),
-    None,                                                   # the question lives on the end card
+    None,                                                   # 'they all said yes' lives on the collage
 ]
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
-HOOK = (BURGER_CLIP, 58.6, 62.5)   # Rochelle holds up the Smiski ring, bridesmaid gasps with the card, 'yes! yes!' (3.9s)
+HOOK = (BURGER_CLIP, 50.3, 58.6)   # she reads the card aloud: 'you know, I can't say I do without you… so… oh!' then the blooper cut
 HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
        (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
 HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
@@ -69,10 +69,10 @@ hit = lambda name, t, vol=0.45: sfx.append((SFX + name + '.wav', max(t, 0), vol)
 now = lambda: sum(s.dur for s in shots)
 
 
-def add_reaction(path, a, b, trans='cut', label=None):
+def add_reaction(path, a, b, trans='cut', label=None, afilter=''):
     t0 = now()
     shots.append(Shot(path, b - a, ss=a, zoom=(1.0, 1.04), trans=trans))
-    og.append((path, a, b - a, t0, 1.0))
+    og.append((path, a, b - a, t0, 1.0, afilter))
     ws = react_words(path, a, b)
     line = []
     for i, w in enumerate(ws):                             # reaction captions (karaoke, same style)
@@ -125,15 +125,8 @@ def vo_block(script, callouts, plan, wps=3.5):
 
 
 S = Shot
-# 1 hook: best reaction (no auto-captions here; a big YES! on her answer instead)
-n_top = len(top)
-add_reaction(*HOOK)
-del top[n_top:]
-t_yes = 61.4 - HOOK[1]
-for i, (spr, (dx, dy)) in enumerate(callout_lines([('YES!', 300, 'c')], ['💍', '🥹'], emoji_size=150)):
-    top.append(Overlay(t_yes + 0.1 * i, HOOK[2] - HOOK[1], spr, (W / 2 + dx, CALL_Y + dy), 'bounce', (8 if i % 2 else -8) if i else 0))
-hit('thud', t_yes, 0.5)
-hit('sparkle', t_yes + 0.1, 0.45)
+# 1 hook: she reads the card (voice-focus filter to push down the background laughter)
+add_reaction(*HOOK, afilter=VOICE_FOCUS)
 ov.append(Overlay(0.2, HOOK[2] - HOOK[1], sprite_tag('proposing to our bridal party', 40, '💍'), (W / 2, 300), 'bounce'))
 hit('click', 0.2, 0.5)
 
@@ -194,13 +187,30 @@ for k, r in enumerate(HIS):
 PLAN_B = [
     [(S(hb(8403), 2.0, zoom=(1.0, 1.1), trans='flash'), None)],
     [(S(hg(6585), 1.8, zoom=(1.0, 1.1), trans='whip'), None)],
-    [(S(hb(8403), 2.0, zoom=(1.05, 1.12), trans='flash'), None)],
+    [(S(hb(8403), 1.2, zoom=(1.05, 1.12), trans='punch'), None)],
 ]
 b_starts, b_ends = vo_block(SCRIPT_B, CALLOUTS_B, PLAN_B)
 
 
-# 6 ending: TBD (no comparison scorecard), hold the last frame briefly
-shots[-1].dur += 1.0
+# 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
+YES = [(BURGER_CLIP, 61.45, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
+       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 6.0, 'groomsmen')]
+LEAD, CDUR = 1.6, 4.2
+col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR, 'collage_yes.mp4')
+t_col = now()
+shots.append(Shot(str(col), CDUR, zoom=(1.0, 1.03), trans='flash'))
+for src, t, lab in YES:
+    og.append((src, t - LEAD, CDUR, t_col, 0.8))
+for i, (src, t, lab) in enumerate(YES):                     # small labels on each tile
+    x = W / 4 + (W / 2) * (i % 2)
+    y = (H / 4 - 330) + (H / 2) * (i // 2) + 120
+    ov.append(Overlay(t_col + 0.2, t_col + CDUR, sprite_tag(lab, 34), (x, max(y, 230)), 'pop', fade_out=False, safe=False))
+t_yes = t_col + LEAD
+for i, (spr, (dx, dy)) in enumerate(callout_lines([('they all said', 90, 'c'), ('YES!', 300, 'c')], ['💍', '🥹'], emoji_size=150)):
+    top.append(Overlay(t_yes + 0.1 * i, t_col + CDUR, spr, (W / 2 + dx, H / 2 + dy), 'bounce',
+                       (8 if i % 2 else -8) if i >= 2 else 0, fade_out=False))
+hit('thud', t_yes, 0.6)
+hit('sparkle', t_yes + 0.15, 0.5)
 TOTAL = now()
 
 if os.environ.get('PLAN_ONLY'):
