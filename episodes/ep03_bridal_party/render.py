@@ -6,6 +6,7 @@ Structure: hook (best reaction) -> glitch rewind -> voiceover A (both explain, o
 usage: EDIT_SCALE=1 python3 episodes/ep03_bridal_party/render.py <out.mp4>
 """
 import sys, os, json
+os.environ.setdefault('EDIT_LOOK', 'light')          # brighter, softer look for this episode
 from pathlib import Path
 from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
@@ -48,7 +49,7 @@ CALLOUTS_B = [
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
-HOOK = (BURGER_CLIP, 50.3, 58.6)   # she reads the card aloud: 'you know, I can't say I do without you… so… oh!' then the blooper cut
+HOOK = (BURGER_CLIP, 50.45, 58.45)   # she reads the card aloud: 'you know, I can't say I do without you… so… oh!' then the blooper cut
 HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
        (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
 HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
@@ -125,8 +126,14 @@ def vo_block(script, callouts, plan, wps=3.5):
 
 
 S = Shot
-# 1 hook: she reads the card (voice-focus filter to push down the background laughter)
-add_reaction(*HOOK, afilter=VOICE_FOCUS)
+# 1 hook: she reads the card (voice-focus filter to push down the background laughter); captions typed in
+n_top = len(top)
+add_reaction(*HOOK, afilter=VOICE_FOCUS + ',agate=threshold=0.08:ratio=8:attack=3:release=120')
+del top[n_top:]
+for words, t1 in [([('you', 50.5), ('know', 51.16), ("i can't", 51.8), ('say', 52.42)], 52.64),
+                  ([('i', 52.64), ('do', 53.6), ('without', 53.88), ('you', 54.38)], 55.8),
+                  ([('so', 55.9), ('oh', 56.64), ('i', 57.6), ("didn't", 57.8), ('know', 58.05)], 58.45)]:
+    top.append(Karaoke([(w, t - HOOK[1]) for w, t in words], t1 - HOOK[1], CAP_Y, 44, set()))
 ov.append(Overlay(0.2, HOOK[2] - HOOK[1], sprite_tag('proposing to our bridal party', 40, '💍'), (W / 2, 300), 'bounce'))
 hit('click', 0.2, 0.5)
 
@@ -194,8 +201,8 @@ b_starts, b_ends = vo_block(SCRIPT_B, CALLOUTS_B, PLAN_B)
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
 YES = [(BURGER_CLIP, 61.45, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
-       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 6.0, 'groomsmen')]
-LEAD, CDUR = 1.6, 4.2
+       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 71.0, 'groomsmen')]   # groomsmen: 'congratulations'
+LEAD, CDUR = 0.12, 2.6                                      # every tile starts right on its yes
 col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR, 'collage_yes.mp4')
 t_col = now()
 shots.append(Shot(str(col), CDUR, zoom=(1.0, 1.03), trans='flash'))
@@ -205,7 +212,7 @@ for i, (src, t, lab) in enumerate(YES):                     # small labels on ea
     x = W / 4 + (W / 2) * (i % 2)
     y = (H / 4 - 330) + (H / 2) * (i // 2) + 120
     ov.append(Overlay(t_col + 0.2, t_col + CDUR, sprite_tag(lab, 34), (x, max(y, 230)), 'pop', fade_out=False, safe=False))
-t_yes = t_col + LEAD
+t_yes = t_col + 0.15
 for i, (spr, (dx, dy)) in enumerate(callout_lines([('they all said', 90, 'c'), ('YES!', 300, 'c')], ['💍', '🥹'], emoji_size=150)):
     top.append(Overlay(t_yes + 0.1 * i, t_col + CDUR, spr, (W / 2 + dx, H / 2 + dy), 'bounce',
                        (8 if i % 2 else -8) if i >= 2 else 0, fade_out=False))

@@ -46,6 +46,13 @@ def _probe_color(src):
 
 # light film look (not vintage): soft lifted blacks, gentle highlight roll-off, warm highs / cool lows,
 # faint moving grain, very mild vignette
+LOOK = os.environ.get('EDIT_LOOK', 'default')
+LOOKS = {
+    'default': dict(luma=0.47, sat=0.30, sat_rng=(0.8, 1.25), contrast=1.04,
+                    curve="0/0.035 0.25/0.24 0.5/0.5 0.75/0.765 1/0.97", vignette=0.32),
+    'light': dict(luma=0.56, sat=0.24, sat_rng=(0.78, 1.0), contrast=0.96,
+                  curve="0/0.075 0.25/0.30 0.5/0.56 0.75/0.80 1/0.97", vignette=0.15),
+}
 FILM = ("curves=all='0/0.035 0.25/0.24 0.5/0.5 0.75/0.765 1/0.97',"
         "colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,"
         "vignette=angle=0.32,noise=alls=4:allf=t")
@@ -71,15 +78,22 @@ def _grade(src, ss, pre):
     luma = float((a @ np.array([0.2126, 0.7152, 0.0722])).mean())
     mx, mn = a.max(1), a.min(1)
     sat = float(np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-3), 0).mean())
-    gamma = float(np.clip(np.log(max(luma, 0.05)) / np.log(0.47), 0.85, 1.3))
-    satf = float(np.clip(0.30 / max(sat, 0.05), 0.8, 1.25))
+    L = LOOKS[LOOK]
+    gamma = float(np.clip(np.log(max(luma, 0.05)) / np.log(L['luma']), 0.85, 1.4))
+    satf = float(np.clip(L['sat'] / max(sat, 0.05), *L['sat_rng']))
     return (f'colorchannelmixer=rr={gains[0]:.3f}:gg={gains[1]:.3f}:bb={gains[2]:.3f},'
-            f'eq=contrast=1.04:gamma={gamma:.3f}:saturation={satf:.3f}')
+            f'eq=contrast={L["contrast"]}:gamma={gamma:.3f}:saturation={satf:.3f}')
+
+
+def film_filter():
+    L = LOOKS[LOOK]
+    return (f"curves=all='{L['curve']}',colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,"
+            f"vignette=angle={L['vignette']},noise=alls=4:allf=t")
 
 
 def _proxy(shot):
     """Transcode the used part of a clip to OWxOH@30 H.264, tone-mapped (HDR) and colour-matched (cached)."""
-    key = hashlib.md5(f'v6|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
+    key = hashlib.md5(f'v6|{LOOK}|{OW}|{shot.src}|{shot.ss}|{shot.dur}|{shot.speed}|{shot.freeze}'.encode()).hexdigest()[:12]
     out = CACHE / f'{Path(shot.src).stem}_{key}.mp4'
     if out.exists():
         return out
@@ -89,7 +103,7 @@ def _proxy(shot):
     src_len = 0.05 if shot.freeze else shot.dur * sp + 0.2
     rev = 'reverse,' if shot.speed < 0 else ''
     vf = (pre + rev + f'scale={OW}:{OH}:force_original_aspect_ratio=increase:flags=lanczos,crop={OW}:{OH},'
-          f'setpts=PTS/{sp},fps={FPS},{eq},{FILM}')
+          f'setpts=PTS/{sp},fps={FPS},{eq},{film_filter()}')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{shot.ss:.3f}', '-t', f'{src_len:.3f}', '-i', shot.src,
                     '-vf', vf, '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '16', str(out)], check=True)
     return out
