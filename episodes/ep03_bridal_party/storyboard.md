@@ -33,7 +33,7 @@ Format: the voiceover (Rochelle + Joshua taking turns) explains the thought behi
 >
 > *(reaction: groomsmen unzipping together, "today I'm going to ask my friends to become my groomsmen", cheers; cut before the date)*
 >
-> R: But we both snuck in one thing: a Smiski. A ring for my girls… and guys…
+> R: But we both snuck in one thing: a Smiski. A ring for my side…
 > J: …and a luggage tag for mine.
 > R + J: So… whose side would you rather be on?
 
