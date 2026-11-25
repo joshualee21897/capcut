@@ -48,7 +48,7 @@ CALLOUTS_B = [
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
-HOOK = (B + 'IMG_8838.MOV', 22.5, 25.5)                  # bridesman opens the burger, huge laugh (3.0s)
+HOOK = (BURGER_CLIP, 58.6, 62.5)   # Rochelle holds up the Smiski ring, bridesmaid gasps with the card, 'yes! yes!' (3.9s)
 HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
        (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
 HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
@@ -125,8 +125,15 @@ def vo_block(script, callouts, plan, wps=3.5):
 
 
 S = Shot
-# 1 hook: best reaction
+# 1 hook: best reaction (no auto-captions here; a big YES! on her answer instead)
+n_top = len(top)
 add_reaction(*HOOK)
+del top[n_top:]
+t_yes = 61.4 - HOOK[1]
+for i, (spr, (dx, dy)) in enumerate(callout_lines([('YES!', 300, 'c')], ['💍', '🥹'], emoji_size=150)):
+    top.append(Overlay(t_yes + 0.1 * i, HOOK[2] - HOOK[1], spr, (W / 2 + dx, CALL_Y + dy), 'bounce', (8 if i % 2 else -8) if i else 0))
+hit('thud', t_yes, 0.5)
+hit('sparkle', t_yes + 0.1, 0.45)
 ov.append(Overlay(0.2, HOOK[2] - HOOK[1], sprite_tag('proposing to our bridal party', 40, '💍'), (W / 2, 300), 'bounce'))
 hit('click', 0.2, 0.5)
 
