@@ -48,7 +48,7 @@ CALLOUTS_B = [
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
-HOOK = (BURGER_CLIP, 21.4, 23.9)                         # facepalm: 'didn't you take out the entire burger?' (2.5s)
+HOOK = (B + 'IMG_8838.MOV', 22.5, 25.5)                  # bridesman opens the burger, huge laugh (3.0s)
 HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
        (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
 HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
@@ -139,8 +139,8 @@ hit('beep', t_g + 0.12, 0.55)
 
 # 3 voiceover A over placeholders (your filmed clips go here)
 PLAN_A = [
-    [(S(BURGER_CLIP, 2.0, ss=22, trans='flash'), None), (S(hg(6585), 2.0, zoom=(1.0, 1.06), trans='whip'), None)],
-    [(S(BURGER_CLIP, 3.0, ss=24, zoom=(1.0, 1.06)), None)],                                    # title card on top
+    [(S(B + 'IMG_0571.JPG', 2.0, zoom=(1.0, 1.06)), 'film: you two talking to camera'), (S(hg(6585), 2.0, zoom=(1.0, 1.06), trans='whip'), None)],
+    [(S(B + 'IMG_0572.JPG', 3.0, zoom=(1.0, 1.06)), None)],                                               # title card on top (you two)
     [(S(hb(8395), 1.4, zoom=(1.0, 1.08), trans='whip'), 'film: you two holding up the burger'),
      (S(hb(8426), 1.6, zoom=(1.0, 1.08), trans='punch'), None)],
     [(S(hb(8414), 1.0, zoom=(1.0, 1.08), trans='whip'), 'film: pulling out each item'), (S(hb(8424), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
@@ -187,50 +187,14 @@ for k, r in enumerate(HIS):
 PLAN_B = [
     [(S(hb(8403), 2.0, zoom=(1.0, 1.1), trans='flash'), None)],
     [(S(hg(6585), 1.8, zoom=(1.0, 1.1), trans='whip'), None)],
-    [(S(hg(6568), 2.0, soft=0.45, zoom=(1.0, 1.04), trans='flash'), None)],
+    [(S(hb(8403), 2.0, zoom=(1.05, 1.12), trans='flash'), None)],
 ]
 b_starts, b_ends = vo_block(SCRIPT_B, CALLOUTS_B, PLAN_B)
 
 
-# 6 scorecard end card (extends the last shot)
-def scorecard():
-    rows = [('personalised', '✅', '❌'), ('favourite characters', '✅', '❌'), ('everything fit in the box', '❌', '✅'),
-            ('protein', '❌', '✅'), ('asked in one go', '❌', '✅'), ('smiski', '✅', '✅')]
-    cw, rh = 820, 86
-    card = Image.new('RGBA', (cw, 150 + rh * len(rows) + 30), (0, 0, 0, 0))
-    d = ImageDraw.Draw(card)
-    d.rounded_rectangle((0, 0, card.width, card.height), 30, fill=(253, 251, 245, 245))
-    fb, fr = font('info_bold', 34), font('info', 30)
-    for x, (lab, ch) in zip((560, 720), [('her', '🍔'), ('his', '🏋️')]):
-        card.alpha_composite(emoji(ch, 56), (x - 28, 22))
-        d.text((x, 104), lab, font=fb, fill=(40, 36, 30), anchor='mm')
-    for i, (lab, a, b) in enumerate(rows):
-        y = 150 + rh * i + rh // 2
-        d.line((30, y - rh // 2, cw - 30, y - rh // 2), fill=(225, 220, 210), width=2)
-        d.text((40, y), lab, font=fr, fill=(40, 36, 30), anchor='lm')
-    return card, rows
-
-
-card, rows = scorecard()
-t_end = b_starts[2]
-end_dur = 3.5
-shots[-1].dur += end_dur
+# 6 ending: TBD (no comparison scorecard), hold the last frame briefly
+shots[-1].dur += 1.0
 TOTAL = now()
-ov.append(Overlay(t_end + 0.2, TOTAL, card, (W / 2, 1180), 'slide_up', fade_out=False))
-hit('ding', t_end + 0.6, 0.45)
-for i, (lab, a, b) in enumerate(rows):                      # ticks pop in row by row
-    y = 1180 - card.height / 2 + 150 + 86 * i + 43
-    tt = t_end + 0.9 + 0.35 * i
-    for x, ch in ((W / 2 - card.width / 2 + 560, a), (W / 2 - card.width / 2 + 720, b)):
-        ov.append(Overlay(tt, TOTAL, sticker(ch, 58, 4), (x, y), 'bounce', fade_out=False))
-    hit('pop', tt, 0.4)
-q1 = sprite_text('whose side', font('bootzy', 120), 'white', 12)
-q2 = sprite_text('are you on?', font('bootzy', 120), BUTTER, 12)
-ov.append(Overlay(t_end + 0.1, TOTAL, q1, (W / 2 - 40, 430), 'bounce', fade_out=False))
-ov.append(Overlay(t_end + 0.25, TOTAL, q2, (W / 2 + 40, 545), 'bounce', fade_out=False))
-ov.append(Overlay(t_end + 0.4, TOTAL, sticker('🍔', 120), (175, 360), 'bounce', -8, fade_out=False))
-ov.append(Overlay(t_end + 0.5, TOTAL, sticker('🏋️', 120), (905, 640), 'bounce', 8, fade_out=False))
-hit('thud', t_end + 0.1, 0.5)
 
 if os.environ.get('PLAN_ONLY'):
     for i, s in enumerate(shots):
