@@ -136,6 +136,79 @@ def vo_block(script, callouts, plan, wps=3.5):
     return starts, ends
 
 
+
+# ---------------------------------------------------------------- talking-head blocks (Rochelle left, Joshua right)
+TALK = '/home/user/footage_ep3/talk/IMG_9663.MOV'
+TALK_AUDIO = '/home/user/footage_ep3/talk/talk_clean.wav'           # wind/noise removed, EQ'd, levelled
+TW_ = json.load(open('/home/user/footage_ep3/talk/talk_words.json'))
+FIX = {'correctors': 'characters', 'teamed': 'themed', "smiski's": 'smiski', 'personalized': 'personalised',
+       'favorite': 'favourite'}
+FRAMES = {'both': ((1.2, 1.24), (0.5, 0.55)), 'R': ((1.85, 1.92), (0.33, 0.43)), 'J': ((1.85, 1.92), (0.69, 0.42)),
+          'R2': ((1.45, 1.5), (0.36, 0.47)), 'J2': ((1.45, 1.5), (0.66, 0.46))}
+ITEMS = '/home/user/edit_cache/items/'
+
+
+def talk_words(a, b):
+    ws = [w for seg in TW_ for w in seg['words'] if a - 0.05 <= w['s'] < b]
+    return [dict(w, w=FIX.get(w['w'].lower().strip('.,!?~'), w['w'])) for w in ws]
+
+
+def src_to_tl(map_, t):
+    for ss, se, t0 in map_:
+        if ss <= t <= se:
+            return t0 + (t - ss)
+    return None
+
+
+def talk_block(segs, cap_y=1400, gap_split=0.42):
+    """segs: [(src_in, src_out, frame or [(src_t, frame), ...])]. Splits at pauses (jump cuts), reframes per speaker.
+    Returns a source->timeline map."""
+    map_ = []
+    for a, b, fr in segs:
+        ws = talk_words(a, b)
+        pieces, cur = [], [max(a, ws[0]['s'] - 0.08) if ws else a, None]
+        for i, w in enumerate(ws):
+            nxt = ws[i + 1]['s'] if i + 1 < len(ws) else None
+            if nxt is not None and nxt - w['e'] > gap_split:
+                pieces.append((cur[0], w['e'] + 0.12)); cur = [nxt - 0.08, None]
+        pieces.append((cur[0], min(b, (ws[-1]['e'] + 0.18) if ws else b)))
+        for k, (pa, pb) in enumerate(pieces):
+            f = fr
+            if isinstance(fr, list):                          # frame changes at given source times
+                f = [x for t, x in fr if t <= pa + 0.01][-1]
+            (z0, z1), pan = FRAMES[f]
+            t0 = now()
+            shots.append(Shot(TALK, pb - pa, ss=pa, zoom=(z0, z1), pan=pan, trans='punch' if k else 'cut'))
+            og.append((TALK_AUDIO, pa, pb - pa, t0, 1.0))
+            map_.append((pa, pb, t0))
+        toks = [dict(w=w['w'], s=src_to_tl(map_, w['s']), e=src_to_tl(map_, min(w['e'], b)) or 0, para=0, phrase=None)
+                for w in ws if src_to_tl(map_, w['s']) is not None]
+        if toks:
+            kar, _ = build_captions(toks, set(), y_at=lambda t: cap_y)
+            top.extend(kar)
+    return map_
+
+
+def item_pop(map_, src_t, name, pos, h=330, dur=2.6, until=None):
+    t = src_to_tl(map_, src_t)
+    if t is None:
+        return
+    spr = cutout_sprite(ITEMS + name + '.png', h, outline=6)
+    if spr.width > 420:
+        spr = spr.resize((420, int(spr.height * 420 / spr.width)), Image.LANCZOS)
+    ov.append(Overlay(t, until if until else t + dur, spr, pos, 'bounce', 6 if pos[0] > W / 2 else -6))
+    hit('pop', t, 0.5)
+
+
+def callout_at(map_, src_t, lines, ch, y=1080, dur=1.8):
+    t = src_to_tl(map_, src_t)
+    if t is None:
+        return
+    for i, (spr, (dx, dy)) in enumerate(callout_lines(lines, ch, emoji_size=150)):
+        is_emoji = i >= len(lines)
+        top.insert(0, Overlay(t + 0.12 * i, t + dur, spr, (W / 2 + dx, y + dy), 'bounce', (8 if i % 2 else -8) if is_emoji else 0))
+    hit('thud', t, 0.5)
+
 S = Shot
 # 1 hook: she reads the card (voice-focus filter to push down the background laughter); captions typed in
 n_top = len(top)
@@ -153,26 +226,16 @@ shots.append(S(lambda t: no_signal_frame(t), 0.7, zoom=(1.0, 1.0)))
 hit('glitch', t_g, 0.5)
 hit('beep', t_g + 0.12, 0.55)
 
-# 3 voiceover A over placeholders (your filmed clips go here)
-PLAN_A = [
-    [(S(B + 'IMG_0572.JPG', 4.0, zoom=(1.0, 1.06)), 'film: you two, welcome')],                         # title card on top
-    [(S(B + 'IMG_0571.JPG', 2.0, zoom=(1.0, 1.06), trans='whip'), 'film: R holds burger, J holds gym bag'),
-     (S(hg(6585), 2.0, zoom=(1.0, 1.06), trans='punch'), None)],
-    [(S(hb(8395), 1.4, zoom=(1.0, 1.08), trans='whip'), 'film: R, items pop in as stickers'),
-     (S(hb(8426), 1.4, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8414), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hb(8409), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8531), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hb(8405), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8418), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hb(8513), 1.4, zoom=(1.0, 1.06), trans='whip'), None), (S(hb(8505), 1.4, zoom=(1.0, 1.06), trans='punch'), None)],
-    [(S(hg(6568), 1.3, zoom=(1.0, 1.08), trans='whip'), 'film: J, gym items pop in'), (S(hg(6556), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hg(6575), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hg(6582), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hg(6560), 1.0, zoom=(1.0, 1.08), trans='punch'), None)],
-    [(S(hg(6566), 0.8, zoom=(1.0, 1.08), trans='punch'), None), (S(hg(6578), 0.8, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hg(6562), 0.8, zoom=(1.0, 1.08), trans='punch'), None)],
-    [(S(G + 'IMG_1185.MOV', 2.5, ss=40, trans='whip'), None)],
-]
-a_starts, a_ends = vo_block(SCRIPT_A, CALLOUTS_A, PLAN_A)
-# title card over paragraph 2
-t_title, t_title_end = a_starts[0], a_ends[0]
+# 3 you two explain (talking-head clip, retakes removed, jump cuts at pauses, reframed per speaker)
+mapA = talk_block([
+    (4.5, 11.8, 'both'),                                     # R: welcome (title card on top)
+    (22.2, 28.8, 'J'),                                       # J: 'you'll notice the difference…' (2nd take)
+    (29.5, 46.3, [(29.5, 'R'), (35.5, 'R2'), (39.6, 'both'), (42.5, 'R')]),   # R: burger boxes… didn't fit (J reacts)
+    (46.5, 60.8, [(46.5, 'J'), (51.5, 'J2'), (58.0, 'both')]),               # J: gym bag… getting jacked
+    (64.6, 67.7, 'both'),                                    # R: every single guy… (J's face)
+    (77.1, 84.0, 'J'),                                       # J: efficiency… one table, one take (2nd take)
+])
+t_title = src_to_tl(mapA, 4.5); t_title_end = src_to_tl(mapA, 11.7)
 dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 20)
 ov.append(Overlay(t_title, t_title_end, dim, (0, 0), 'fade', full=True))
 delays = {'tag1': 0.1, 'absolutlee': 0.35, 'i': 0.65, 'd': 0.8, 'ring': 1.0, 'tag2': 1.3,
@@ -185,9 +248,25 @@ for name, spr, c in parts:
     if snd:
         hit(snd, t0, 0.5)
 top[:] = [o for o in top if not (isinstance(o, Karaoke) and t_title <= o.t0 < t_title_end - 0.2)]
-# "her side" / "his side" section tags
-ov.append(Overlay(a_starts[2] + 0.1, a_ends[2], sprite_tag('her side', 44, '🍔'), (W / 2, 330), 'bounce'))
-ov.append(Overlay(a_starts[3] + 0.1, a_ends[5], sprite_tag('his side', 44, '🏋️'), (W / 2, 330), 'bounce'))
+# items popping in as they're mentioned
+item_pop(mapA, 26.3, 'bm_burger', (275, 470), until=src_to_tl(mapA, 28.7))
+item_pop(mapA, 28.2, 'gm_duffel', (805, 470), until=src_to_tl(mapA, 28.75))
+item_pop(mapA, 31.0, 'bm_burger', (800, 440), dur=3.0)
+item_pop(mapA, 36.9, 'bm_chupa_711', (800, 450), dur=1.6)
+item_pop(mapA, 38.1, 'bm_pikachu_alien', (280, 450), dur=1.6)
+item_pop(mapA, 38.5, 'bm_snorlax', (800, 450), dur=1.4)
+callout_at(mapA, 44.8, [("DIDN'T", 150, 'l'), ('FIT', 260, 'r')], ['😭', '📏'])
+item_pop(mapA, 48.4, 'gm_duffel', (280, 450), dur=2.4)
+item_pop(mapA, 52.6, 'gm_bars', (800, 450), dur=1.3)
+item_pop(mapA, 53.7, 'gm_shaker', (280, 450), dur=1.2)
+item_pop(mapA, 54.7, 'gm_straps', (800, 450), dur=1.2)
+item_pop(mapA, 55.9, 'gm_towel', (280, 450), dur=1.2)
+item_pop(mapA, 57.2, 'gm_massage', (800, 450), dur=1.3)
+callout_at(mapA, 58.6, [('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️'])
+callout_at(mapA, 66.4, [('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪'])
+callout_at(mapA, 81.3, [('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅'], dur=2.6)
+ov.append(Overlay(src_to_tl(mapA, 29.6), src_to_tl(mapA, 46.2), sprite_tag('her side', 44, '🍔'), (W / 2, 300), 'bounce'))
+ov.append(Overlay(src_to_tl(mapA, 46.6), src_to_tl(mapA, 83.9), sprite_tag('his side', 44, '🏋️'), (W / 2, 300), 'bounce'))
 
 # 4 full reactions
 t_her = now()
@@ -198,14 +277,11 @@ t_his = now()
 for k, r in enumerate(HIS):
     add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('his side', '🏋️') if k == 0 else None)
 
-# 5 voiceover B: Smiski + the question
-PLAN_B = [
-    [(S(hb(8403), 2.0, zoom=(1.0, 1.1), trans='flash'), None)],
-    [(S(hg(6585), 1.8, zoom=(1.0, 1.1), trans='whip'), None)],
-    [(S(hb(8403), 1.2, zoom=(1.05, 1.12), trans='punch'), None)],
-]
-b_starts, b_ends = vo_block(SCRIPT_B, CALLOUTS_B, PLAN_B)
-
+# 5 Smiski lines + 'and they all said…' (talking-head)
+mapB = talk_block([(86.2, 90.9, 'R'), (91.2, 94.7, 'J'), (102.9, 105.2, 'both')])
+item_pop(mapB, 89.6, 'bm_ring', (800, 450), dur=2.0)
+item_pop(mapB, 92.6, 'gm_tag', (280, 450), dur=2.0)
+callout_at(mapB, 87.1, [('SMISKI', 200, 'c'), ('coded wedding', 80, 'c')], ['💍', '🧳'], dur=1.8)
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
 YES = [(BURGER_CLIP, 80.35, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
