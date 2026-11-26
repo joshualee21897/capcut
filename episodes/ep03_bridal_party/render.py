@@ -77,15 +77,7 @@ def add_reaction(path, a, b, text=None, trans='cut', label=None, afilter=''):
     t0 = now()
     shots.append(Shot(path, b - a, ss=a, zoom=(1.0, 1.04), trans=trans))
     og.append((path, a, b - a, t0, 1.0, afilter))
-    if text == '':                                           # no captions for this clip
-        ws = []
-    elif text:                                               # typed caption, spread over the clip
-        tw = text.split()
-        step = (b - a - 0.4) / len(tw)
-        top.append(Karaoke([(w, t0 + 0.15 + i * step) for i, w in enumerate(tw)], t0 + (b - a), CAP_Y, 44, set()))
-        ws = []
-    else:
-        ws = react_words(path, a, b)
+    ws = []                                                  # reactions: no transcripts (too many voices to caption reliably)
     line = []
     for i, w in enumerate(ws):                             # reaction captions (karaoke, same style)
         cw = clean_caption_word(w['w'])
@@ -146,6 +138,56 @@ FIX = {'correctors': 'characters', 'teamed': 'themed', "smiski's": 'smiski', 'pe
 FRAMES = {'both': ((1.2, 1.24), (0.5, 0.55)), 'R': ((1.85, 1.92), (0.33, 0.43)), 'J': ((1.85, 1.92), (0.69, 0.42)),
           'R2': ((1.45, 1.5), (0.36, 0.47)), 'J2': ((1.45, 1.5), (0.66, 0.46))}
 ITEMS = '/home/user/edit_cache/items/'
+ITEMS2 = '/home/user/edit_cache/items2/'
+COUPLE = '/root/.claude/uploads/486170bb-8ec7-5d42-92d8-a87d4f85fa4a/5482b717-image.jpg'   # Rochelle's edited couple photo
+
+
+def cover_collage():
+    """Cover frame: three burger reactions on top, the groomsmen table below, series title at the seam."""
+    p = CACHE / 'cover_collage.png'
+    if p.exists():
+        return Image.open(p).convert('RGBA')
+    from PIL import ImageOps
+    import pillow_heif
+    pillow_heif.register_heif_opener()
+    c = Image.new('RGB', (W, H), (250, 248, 244))
+    tops = [(B + 'IMG_8926.HEIC', (0.5, 0.35)), (COUPLE, (0.5, 0.3)), (B + 'IMG_8840.HEIC', (0.5, 0.3))]
+    for i, (f, cen) in enumerate(tops):
+        im = ImageOps.exif_transpose(Image.open(f)).convert('RGB')
+        c.paste(ImageOps.fit(im, (W // 3, H // 2), centering=cen), (i * W // 3, 0))
+    tbl = CACHE / 'table_frame.png'
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', '30', '-i', G + 'IMG_1185.MOV', '-frames:v', '1', str(tbl)], check=True)
+    c.paste(ImageOps.fit(Image.open(tbl).convert('RGB'), (W, H // 2), centering=(0.55, 0.55)), (0, H // 2))
+    d = ImageDraw.Draw(c)
+    for x in (W // 3, 2 * W // 3):
+        d.line((x, 0, x, H // 2), fill=(250, 248, 244), width=8)
+    d.line((0, H // 2, W, H // 2), fill=(250, 248, 244), width=8)
+    out = c.convert('RGBA')
+    series_title(out, '[ ep 2: the bridal party ]', cy=H // 2)
+    out.save(p)
+    out.convert('RGB').save(str(Path(__file__).parent / 'cover.jpg'), quality=94)
+    return out
+
+
+def clean_talk_seg(a, b):
+    """Level this segment's speech to a common loudness FIRST, then denoise/EQ, so quiet parts aren't eaten."""
+    out = CACHE / f'talkseg_{a:.2f}_{b:.2f}.wav'
+    if out.exists():
+        return str(out)
+    raw = np.frombuffer(subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{a}', '-t', f'{b - a}', '-i', TALK, '-map', '0:a:0',
+                                        '-f', 's16le', '-ac', '1', '-ar', '48000', '-'], capture_output=True).stdout,
+                        np.int16).astype(np.float32) / 32768
+    fr = raw[:len(raw) // 2400 * 2400].reshape(-1, 2400)
+    lv = 20 * np.log10(np.sqrt((fr ** 2).mean(1)) + 1e-9)
+    speech = np.percentile(lv, 85)                           # loud-ish frames = speech
+    gain = float(np.clip(-20 - speech, -6, 48))
+    nr = 14 if gain < 20 else 30                             # very quiet recording: stronger denoise after boost
+    chain = (f'volume={gain:.1f}dB,highpass=f=140,lowpass=f=11000,afftdn=nr={nr}:nf=-60:tn=1,anlmdn=s={7 if gain >= 20 else 2},'
+             'equalizer=f=220:t=q:w=1.2:g=-2.5,equalizer=f=3800:t=q:w=1.0:g=3,equalizer=f=10000:t=q:w=0.8:g=1.5,'
+             'deesser=i=0.3,acompressor=threshold=-22dB:ratio=3:attack=6:release=120:makeup=2,alimiter=limit=0.9')
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', f'{a}', '-t', f'{b - a}', '-i', TALK, '-map', '0:a:0', '-af', chain,
+                    '-ar', '48000', '-ac', '2', str(out)], check=True)
+    return str(out)
 
 
 def talk_words(a, b):
@@ -153,10 +195,18 @@ def talk_words(a, b):
     return [dict(w, w=FIX.get(w['w'].lower().strip('.,!?~'), w['w'])) for w in ws]
 
 
-def src_to_tl(map_, t):
+def src_to_tl(map_, t, snap=True):
     for ss, se, t0 in map_:
         if ss <= t <= se:
             return t0 + (t - ss)
+    if not snap or not map_:
+        return None
+    after = [(ss, t0) for ss, se, t0 in map_ if ss > t]           # inside a cut pause: snap to the next kept moment
+    if after and min(after)[0] - t < 1.5:
+        return min(after)[1]
+    before = [(se, t0 + se - ss) for ss, se, t0 in map_ if se < t]
+    if before and t - max(before)[0] < 1.5:
+        return max(before)[1]
     return None
 
 
@@ -172,17 +222,28 @@ def talk_block(segs, cap_y=1400, gap_split=0.42):
             if nxt is not None and nxt - w['e'] > gap_split:
                 pieces.append((cur[0], w['e'] + 0.12)); cur = [nxt - 0.08, None]
         pieces.append((cur[0], min(b, (ws[-1]['e'] + 0.18) if ws else b)))
-        for k, (pa, pb) in enumerate(pieces):
-            f = fr
-            if isinstance(fr, list):                          # frame changes at given source times
-                f = [x for t, x in fr if t <= pa + 0.01][-1]
-            (z0, z1), pan = FRAMES[f]
+        frl = fr if isinstance(fr, list) else [(a, fr)]
+        cuts = [t for t, _ in frl[1:]]
+        split = []
+        for pa, pb in pieces:                                 # also cut exactly where the framing / cutaway changes
+            edges = [pa] + [c for c in cuts if pa < c < pb] + [pb]
+            split += list(zip(edges, edges[1:]))
+        prev = None
+        for pa, pb in split:
+            f = [x for t, x in frl if t <= pa + 0.01][-1]
             t0 = now()
-            shots.append(Shot(TALK, pb - pa, ss=pa, zoom=(z0, z1), pan=pan, trans='punch' if k else 'cut'))
-            og.append((TALK_AUDIO, pa, pb - pa, t0, 1.0))
+            if isinstance(f, tuple):                          # cutaway: ('clip', path, src_in) while the talk audio continues
+                _, cpath, cin = f
+                off = pa - [t for t, x in frl if x is f][0]
+                shots.append(Shot(cpath, pb - pa, ss=cin + off, zoom=(1.0, 1.04), trans='cut'))
+            else:
+                (z0, z1), pan = FRAMES[f]
+                shots.append(Shot(TALK, pb - pa, ss=pa, zoom=(z0, z0), pan=pan, trans='cut'))
+            og.append((clean_talk_seg(a, b), pa - a, pb - pa, t0, 1.0))
             map_.append((pa, pb, t0))
-        toks = [dict(w=w['w'], s=src_to_tl(map_, w['s']), e=src_to_tl(map_, min(w['e'], b)) or 0, para=0, phrase=None)
-                for w in ws if src_to_tl(map_, w['s']) is not None]
+            prev = f
+        toks = [dict(w=w['w'], s=src_to_tl(map_, w['s'], False), e=src_to_tl(map_, min(w['e'], b)) or 0, para=0, phrase=None)
+                for w in ws if src_to_tl(map_, w['s'], False) is not None]
         if toks:
             kar, _ = build_captions(toks, set(), y_at=lambda t: cap_y)
             top.extend(kar)
@@ -230,10 +291,10 @@ hit('beep', t_g + 0.12, 0.55)
 mapA = talk_block([
     (4.5, 11.8, 'both'),                                     # R: welcome (title card on top)
     (22.2, 28.8, 'J'),                                       # J: 'you'll notice the difference…' (2nd take)
-    (29.5, 46.3, [(29.5, 'R'), (35.5, 'R2'), (39.6, 'both'), (42.5, 'R')]),   # R: burger boxes… didn't fit (J reacts)
-    (46.5, 60.8, [(46.5, 'J'), (51.5, 'J2'), (58.0, 'both')]),               # J: gym bag… getting jacked
+    (29.5, 46.3, [(29.5, 'R'), (39.6, 'both'), (44.4, ('clip', B + 'IMG_8593.MOV', 0.2))]),   # R … 'didn't even fit' = the overflow bag
+    (46.5, 60.8, [(46.5, 'J'), (58.0, 'both')]),            # J: gym bag… getting jacked
     (64.6, 67.7, 'both'),                                    # R: every single guy… (J's face)
-    (77.1, 84.0, 'J'),                                       # J: efficiency… one table, one take (2nd take)
+    (77.1, 84.0, [(77.1, 'J'), (79.5, ('clip', G + 'IMG_1185.MOV', 29.0))]),   # J … 'asked them all at once' = the table
 ])
 t_title = src_to_tl(mapA, 4.5); t_title_end = src_to_tl(mapA, 11.7)
 dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 270)   # below their faces
@@ -248,20 +309,43 @@ for name, spr, c in parts:
     if snd:
         hit(snd, t0, 0.5)
 top[:] = [o for o in top if not (isinstance(o, Karaoke) and t_title <= o.t0 < t_title_end - 0.2)]
-# items popping in as they're mentioned
-item_pop(mapA, 26.3, 'bm_burger', (275, 470), until=src_to_tl(mapA, 28.7))
-item_pop(mapA, 28.2, 'gm_duffel', (805, 470), until=src_to_tl(mapA, 28.75))
-item_pop(mapA, 31.0, 'bm_burger', (800, 440), dur=3.0)
-item_pop(mapA, 36.9, 'bm_chupa_711', (800, 450), dur=1.6)
-item_pop(mapA, 38.1, 'bm_pikachu_alien', (280, 450), dur=1.6)
-item_pop(mapA, 38.5, 'bm_snorlax', (800, 450), dur=1.4)
+# cover collage on "…where we propose to our bridal party, because we can't say I do without them"
+t_col0, t_col1 = src_to_tl(mapA, 7.85), src_to_tl(mapA, 11.75)
+ov.append(Overlay(t_col0, t_col1, cover_collage(), (0, 0), 'fade', full=True))
+hit('shutter', t_col0, 0.5)
+# Joshua: "one of us bought a giant burger" (Rochelle's photo stays) "…and the other bought a gym bag" (Joshua's photo)
+pr = polaroid(B + 'IMG_0571.JPG', width=400, angle=-5)
+pj = polaroid(G + 'IMG_6588.HEIC', width=400, angle=5)
+t_b, t_g2, t_e = src_to_tl(mapA, 26.3), src_to_tl(mapA, 28.2), src_to_tl(mapA, 28.75) + 0.6
+ov.append(Overlay(t_b, t_e, pr, (300, 520), 'drop')); hit('shutter', t_b + 0.3, 0.5)
+ov.append(Overlay(t_g2, t_e, pj, (780, 560), 'drop')); hit('shutter', t_g2 + 0.3, 0.5)
+item_pop(mapA, 31.0, 'bm_burger', (800, 470), dur=1.8)
+# "everyone had something similar but personalised… favourite brands or characters": everything floods up
+FLOOD = ['b8424_1', 'b8414_1', 'b8408_1', 'b8408_2', 'b8409_1', 'b8399_1', 'b8418_1', 'b8421_1', 'b8411_1',
+         'b8406_1', 'b8531_1', 'b8396_1', 'b8403_2', 'b8421_3']
+t_f0, t_f1 = src_to_tl(mapA, 33.0), src_to_tl(mapA, 39.4)
+import random
+rnd = random.Random(7)
+for i, nm in enumerate(FLOOD):
+    spr = cutout_sprite(ITEMS2 + nm + '.png', rnd.randint(250, 330), outline=6)
+    if spr.width > 380:
+        spr = spr.resize((380, int(spr.height * 380 / spr.width)), Image.LANCZOS)
+    x = 190 + (i % 4) * 233 + rnd.randint(-40, 40)
+    y = 1450 - (i // 4) * 330 + rnd.randint(-50, 50)
+    ov.append(Overlay(t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), t_f1, spr.rotate(rnd.randint(-14, 14), expand=True,
+                      resample=Image.BICUBIC), (x, y), 'slide_up', safe=False))
+    hit('pop', t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), 0.3)
 callout_at(mapA, 44.8, [("DIDN'T", 150, 'l'), ('FIT', 260, 'r')], ['😭', '📏'])
-item_pop(mapA, 48.4, 'gm_duffel', (280, 450), dur=2.4)
-item_pop(mapA, 52.6, 'gm_bars', (800, 450), dur=1.3)
-item_pop(mapA, 53.7, 'gm_shaker', (280, 450), dur=1.2)
-item_pop(mapA, 54.7, 'gm_straps', (800, 450), dur=1.2)
-item_pop(mapA, 55.9, 'gm_towel', (280, 450), dur=1.2)
-item_pop(mapA, 57.2, 'gm_massage', (800, 450), dur=1.3)
+# Joshua's list: the gym bag alone, then each item
+def item2(src_t, nm, pos, h=340, dur=1.3):
+    t = src_to_tl(mapA, src_t)
+    spr = cutout_sprite(ITEMS2 + nm + '.png', h, outline=6)
+    if spr.width > 460:
+        spr = spr.resize((460, int(spr.height * 460 / spr.width)), Image.LANCZOS)
+    ov.append(Overlay(t, t + dur, spr, pos, 'bounce', 6 if pos[0] > W / 2 else -6)); hit('pop', t, 0.5)
+item2(48.4, 'gm_bag_only', (540, 520), h=420, dur=2.6)
+item2(52.6, 'g6556_1', (790, 470)); item2(53.7, 'g6554_1', (290, 470), h=380); item2(54.7, 'g6582_1', (790, 470))
+item2(55.9, 'g6560_1', (290, 470)); item2(57.2, 'g6553_1', (790, 470))
 callout_at(mapA, 58.6, [('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️'])
 callout_at(mapA, 66.4, [('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪'])
 callout_at(mapA, 81.3, [('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅'], dur=2.6)
@@ -279,8 +363,8 @@ for k, r in enumerate(HIS):
 
 # 5 Smiski lines + 'and they all said…' (talking-head)
 mapB = talk_block([(86.2, 90.9, 'R'), (91.2, 94.7, 'J'), (102.9, 105.2, 'both')])
-item_pop(mapB, 89.6, 'bm_ring', (800, 450), dur=2.0)
-item_pop(mapB, 92.6, 'gm_tag', (280, 450), dur=2.0)
+item_pop(mapB, 89.6, '../items2/b8403_2', (800, 450), dur=2.0)
+item_pop(mapB, 92.6, '../items2/gm_tag_big', (280, 470), h=420, dur=2.2)
 callout_at(mapB, 87.1, [('SMISKI', 200, 'c'), ('coded wedding', 80, 'c')], ['💍', '🧳'], dur=1.8)
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
@@ -302,8 +386,9 @@ TOTAL = now()
 
 if os.environ.get('PLAN_ONLY'):
     for i, s in enumerate(shots):
-        print(f'{sum(x.dur for x in shots[:i]):6.2f} {Path(s.src).name:42s} {s.dur:.2f}s')
+        print(f'{sum(x.dur for x in shots[:i]):6.2f} {(Path(s.src).name if isinstance(s.src, str) else "gen"):42s} {s.dur:.2f}s')
     print('total', round(TOTAL, 2))
+    for o_ in og: print('OG', [round(v, 2) if isinstance(v, float) else (v[-30:] if isinstance(v, str) else v) for v in o_[:5]])
     sys.exit()
 out = sys.argv[1]
 total = render(shots, ov + top, sfx, og, out, None, TOTAL)
