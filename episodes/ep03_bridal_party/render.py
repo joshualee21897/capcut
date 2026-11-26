@@ -19,40 +19,45 @@ BURGER_CLIP = B + '1172F250-E2E2-4936-816E-65F11C27E0F0.MOV'
 hb = lambda n: B + f'IMG_{n}.HEIC'
 hg = lambda n: G + f'IMG_{n}.HEIC'
 
-SCRIPT_A = [   # R = Rochelle, J = Joshua (draft: placeholder timing until the VO is recorded)
-    "We asked our bridal party to stand beside us, and you can tell exactly who planned which side.",
-    "Welcome to episode two of AbsolutLEE I Do.",
-    "My side first. Every bridesmaid, and my two bridesmen, got a {giant burger.} Don't ask.",
-    "Inside, {everyone got something different.} Their favourite characters, Pikachu, Snorlax, Sully, Patrick, plus stuff they'd actually use.",
-    "Tiny problem. I bought way too much, never measured the burger, and half of it {didn't fit.}",
-    "My side? A gym bag. Protein bars, a shaker, lifting straps, and a matching tee.",
+SCRIPT_A = [   # Rochelle + Joshua's script (placeholder timing until the VO is recorded)
+    "Welcome to episode two of AbsolutLEE I Do, where we propose to our bridal party, because we can't say I do without them.",
+    "And you'll notice the difference right away. What do you mean one of us bought a {giant burger} and the other bought a gym bag?",
+    "Every bridesmaid got a giant burger box. Inside, everyone got something similar but personalised, themed around their favourite characters and brands. For example travel bags, there were Pikachu packing cubes, an alien or Chupa Chups toiletries bag, and a 7-Eleven shopping bag. Tiny problem. I bought way too much, never measured anything, and half of it {didn't fit} inside the burger.",
+    "Meanwhile, I got a gym bag you can carry three different ways. Inside, protein bars, a shaker bottle, lifting straps, a matching towel, and a massage gun. We're all {getting jacked} next year.",
     "Every single guy got {the exact same thing.}",
     "It's called efficiency. And I asked them all at once. {One table, one take.} Done.",
-    "Here's how they reacted.",
 ]
 SCRIPT_B = [
-    "But we both snuck in one thing. {A Smiski.} A ring for my side,",
-    "and a luggage tag for mine.",
-    "And {they all said yes.}",
+    "And since it's a Smiski-coded wedding, we both snuck one in. A {Smiski} ring for my bridesmaids,",
+    "and a Smiski luggage tag for my groomsmen.",
+    "And they all said",
 ]
 CALLOUTS_A = [
     ([('GIANT', 150, 'l'), ('BURGER', 210, 'r')], ['🍔', '😂']),
-    ([('EVERYONE', 140, 'c'), ('DIFFERENT', 170, 'c')], ['✨', '🎁']),
     ([("DIDN'T", 150, 'l'), ('FIT', 260, 'r')], ['😭', '📏']),
+    ([('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️']),
     ([('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪']),
     ([('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅']),
 ]
 CALLOUTS_B = [
-    ([('SMISKI', 210, 'c'), ('for everyone', 80, 'c')], ['💍', '🧳']),
-    None,                                                   # 'they all said yes' lives on the collage
+    ([('SMISKI', 210, 'c'), ('coded wedding', 80, 'c')], ['💍', '🧳']),
 ]
 CAP_Y, CALL_Y = 760, 1290
 
 # ---------------------------------------------------------------- reactions (source clip, in, out)
 HOOK = (BURGER_CLIP, 50.45, 58.45)   # she reads the card aloud: 'you know, I can't say I do without you… so… oh!' then the blooper cut
-HER = [(BURGER_CLIP, 50.6, 55.2), (B + 'IMG_8838.MOV', 3.9, 7.9), (B + 'IMG_8838.MOV', 53.4, 58.2),
-       (B + 'IMG_8841.MOV', 7.8, 11.7), (B + 'IMG_8598.MOV', 49.0, 53.6)]
-HIS = [(G + 'IMG_1185.MOV', 0.0, 9.6)]   # ends long before the date is said
+# many short reactions (2-4s), faces always in frame; optional 4th item = typed caption
+M38, M41, M98 = B + 'IMG_8838.MOV', B + 'IMG_8841.MOV', B + 'IMG_8598.MOV'
+HER = [(BURGER_CLIP, 8.6, 11.0, "oh my god what's this"),
+       (BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
+       (M38, 4.4, 7.6), (M38, 10.0, 12.0),
+       (M38, 56.0, 58.4), (M38, 58.3, 62.7),
+       (M38, 84.4, 86.4), (M38, 90.0, 93.4),
+       (M41, 0.0, 2.4), (M41, 8.0, 11.6),
+       (M98, 88.0, 90.5),
+       (BURGER_CLIP, 76.0, 77.2), (BURGER_CLIP, 84.2, 86.4)]
+HIS = [(G + 'IMG_1185.MOV', 0.0, 3.6), (G + 'IMG_1185.MOV', 5.2, 7.2, 'wooo'),
+       (G + 'IMG_1185.MOV', 58.6, 61.6), (G + 'IMG_1185.MOV', 70.8, 73.4, 'congratulations')]   # all well before the date
 
 
 def react_words(path, a, b):
@@ -70,11 +75,17 @@ hit = lambda name, t, vol=0.45: sfx.append((SFX + name + '.wav', max(t, 0), vol)
 now = lambda: sum(s.dur for s in shots)
 
 
-def add_reaction(path, a, b, trans='cut', label=None, afilter=''):
+def add_reaction(path, a, b, text=None, trans='cut', label=None, afilter=''):
     t0 = now()
     shots.append(Shot(path, b - a, ss=a, zoom=(1.0, 1.04), trans=trans))
     og.append((path, a, b - a, t0, 1.0, afilter))
-    ws = react_words(path, a, b)
+    if text:                                                 # typed caption, spread over the clip
+        tw = text.split()
+        step = (b - a - 0.4) / len(tw)
+        top.append(Karaoke([(w, t0 + 0.15 + i * step) for i, w in enumerate(tw)], t0 + (b - a), CAP_Y, 44, set()))
+        ws = []
+    else:
+        ws = react_words(path, a, b)
     line = []
     for i, w in enumerate(ws):                             # reaction captions (karaoke, same style)
         cw = clean_caption_word(w['w'])
@@ -146,26 +157,24 @@ hit('beep', t_g + 0.12, 0.55)
 
 # 3 voiceover A over placeholders (your filmed clips go here)
 PLAN_A = [
-    [(S(B + 'IMG_0571.JPG', 2.0, zoom=(1.0, 1.06)), 'film: you two talking to camera'), (S(hg(6585), 2.0, zoom=(1.0, 1.06), trans='whip'), None)],
-    [(S(B + 'IMG_0572.JPG', 3.0, zoom=(1.0, 1.06)), None)],                                               # title card on top (you two)
-    [(S(hb(8395), 1.4, zoom=(1.0, 1.08), trans='whip'), 'film: you two holding up the burger'),
-     (S(hb(8426), 1.6, zoom=(1.0, 1.08), trans='punch'), None)],
-    [(S(hb(8414), 1.0, zoom=(1.0, 1.08), trans='whip'), 'film: pulling out each item'), (S(hb(8424), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
+    [(S(B + 'IMG_0572.JPG', 4.0, zoom=(1.0, 1.06)), 'film: you two, welcome')],                         # title card on top
+    [(S(B + 'IMG_0571.JPG', 2.0, zoom=(1.0, 1.06), trans='whip'), 'film: R holds burger, J holds gym bag'),
+     (S(hg(6585), 2.0, zoom=(1.0, 1.06), trans='punch'), None)],
+    [(S(hb(8395), 1.4, zoom=(1.0, 1.08), trans='whip'), 'film: R, items pop in as stickers'),
+     (S(hb(8426), 1.4, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8414), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
      (S(hb(8409), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8531), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
-     (S(hb(8405), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8418), 1.0, zoom=(1.0, 1.08), trans='punch'), None)],
-    [(S(hb(8513), 1.5, zoom=(1.0, 1.06), trans='whip'), 'film: stuff spilling out of the burger'),
-     (S(hb(8505), 1.5, zoom=(1.0, 1.06), trans='punch'), None)],
-    [(S(hg(6568), 1.3, zoom=(1.0, 1.08), trans='whip'), 'film: Josh unpacking the gym bag'), (S(hg(6556), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
+     (S(hb(8405), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hb(8418), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
+     (S(hb(8513), 1.4, zoom=(1.0, 1.06), trans='whip'), None), (S(hb(8505), 1.4, zoom=(1.0, 1.06), trans='punch'), None)],
+    [(S(hg(6568), 1.3, zoom=(1.0, 1.08), trans='whip'), 'film: J, gym items pop in'), (S(hg(6556), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
      (S(hg(6575), 1.0, zoom=(1.0, 1.08), trans='punch'), None), (S(hg(6582), 1.0, zoom=(1.0, 1.08), trans='punch'), None),
      (S(hg(6560), 1.0, zoom=(1.0, 1.08), trans='punch'), None)],
     [(S(hg(6566), 0.8, zoom=(1.0, 1.08), trans='punch'), None), (S(hg(6578), 0.8, zoom=(1.0, 1.08), trans='punch'), None),
      (S(hg(6562), 0.8, zoom=(1.0, 1.08), trans='punch'), None)],
-    [(S(G + 'IMG_1185.MOV', 2.5, ss=40, soft=0.0, trans='whip'), None)],
-    [(S(BURGER_CLIP, 1.5, ss=5, trans='zoomblur'), None)],
+    [(S(G + 'IMG_1185.MOV', 2.5, ss=40, trans='whip'), None)],
 ]
 a_starts, a_ends = vo_block(SCRIPT_A, CALLOUTS_A, PLAN_A)
 # title card over paragraph 2
-t_title, t_title_end = a_starts[1], a_ends[1]
+t_title, t_title_end = a_starts[0], a_ends[0]
 dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 20)
 ov.append(Overlay(t_title, t_title_end, dim, (0, 0), 'fade', full=True))
 delays = {'tag1': 0.1, 'absolutlee': 0.35, 'i': 0.65, 'd': 0.8, 'ring': 1.0, 'tag2': 1.3,
@@ -179,16 +188,16 @@ for name, spr, c in parts:
         hit(snd, t0, 0.5)
 top[:] = [o for o in top if not (isinstance(o, Karaoke) and t_title <= o.t0 < t_title_end - 0.2)]
 # "her side" / "his side" section tags
-ov.append(Overlay(a_starts[2] + 0.1, a_ends[4], sprite_tag('her side', 44, '🍔'), (W / 2, 330), 'bounce'))
-ov.append(Overlay(a_starts[5] + 0.1, a_ends[7], sprite_tag('his side', 44, '🏋️'), (W / 2, 330), 'bounce'))
+ov.append(Overlay(a_starts[2] + 0.1, a_ends[2], sprite_tag('her side', 44, '🍔'), (W / 2, 330), 'bounce'))
+ov.append(Overlay(a_starts[3] + 0.1, a_ends[5], sprite_tag('his side', 44, '🏋️'), (W / 2, 330), 'bounce'))
 
 # 4 full reactions
 t_her = now()
 for k, r in enumerate(HER):
-    add_reaction(*r, trans='whip' if k else 'flash', label=('her side', '🍔') if k == 0 else None)
+    add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('her side', '🍔') if k == 0 else None)
 t_his = now()
 for k, r in enumerate(HIS):
-    add_reaction(*r, trans='whip' if k else 'flash', label=('his side', '🏋️') if k == 0 else None)
+    add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('his side', '🏋️') if k == 0 else None)
 
 # 5 voiceover B: Smiski + the question
 PLAN_B = [
@@ -200,8 +209,8 @@ b_starts, b_ends = vo_block(SCRIPT_B, CALLOUTS_B, PLAN_B)
 
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
-YES = [(BURGER_CLIP, 61.45, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
-       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 71.0, 'groomsmen')]   # groomsmen: 'congratulations'
+YES = [(BURGER_CLIP, 80.35, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
+       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 65.5, 'groomsmen')]
 LEAD, CDUR = 0.12, 2.6                                      # every tile starts right on its yes
 col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR, 'collage_yes.mp4')
 t_col = now()
