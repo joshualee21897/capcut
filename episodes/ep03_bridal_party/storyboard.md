@@ -60,3 +60,19 @@ Two columns: 🍔 HER SIDE vs 🏋️ HIS SIDE. Rows tick in with a pop:
 - protein ❌ / ✅
 - asked in one go ❌ / ✅
 - Smiski ✅ / ✅
+
+
+## Script Rochelle and Joshua will likely follow (latest)
+
+> R: Welcome to episode two of AbsolutLEE I Do, where we propose to our bridal party, because we can't say "I do" without them.
+> J: And you'll notice the difference right away. What do you mean one of us bought a giant burger and the other bought a gym bag?
+> R: Every bridesmaid got a giant burger box. Inside, everyone got something similar but personalised, themed around their favourite characters and brands. For example travel bags: there were Pikachu packing cubes, an alien or Chupa Chups toiletries bag, and a 7-Eleven shopping bag. Tiny problem. I bought way too much, never measured anything, and half of it didn't fit inside the burger.
+> J: Meanwhile, I got a gym bag you can carry three different ways. Inside: protein bars, a shaker bottle, lifting straps, a matching towel, and a massage gun. We're all getting jacked next year.
+> R: Every single guy got the exact same thing.
+> J: It's called efficiency. And I asked them all at once. One table, one take. Done.
+> R: And since it's a Smiski-coded wedding, we both snuck one in. A Smiski ring for my bridesmaids…
+> J: …and a Smiski luggage tag for my groomsmen.
+> R+J: And they all said… → "YES" collage
+
+Colour: match Rochelle's reference (neutral white balance, saturation ~0.29, deep blacks): `EDIT_LOOK=natural`.
+Reaction candidates for approval: `reaction_candidates.jpg` (A–P).

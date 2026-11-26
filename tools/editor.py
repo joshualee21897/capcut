@@ -50,6 +50,8 @@ LOOK = os.environ.get('EDIT_LOOK', 'default')
 LOOKS = {
     'default': dict(luma=0.47, sat=0.30, sat_rng=(0.8, 1.25), contrast=1.04,
                     curve="0/0.035 0.25/0.24 0.5/0.5 0.75/0.765 1/0.97", vignette=0.32),
+    'natural': dict(luma=0.50, sat=0.29, sat_rng=(0.9, 1.3), contrast=1.02, wb=1.0, warm=False,
+                    curve="0/0.03 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.2),
     'light': dict(luma=0.56, sat=0.24, sat_rng=(0.78, 1.0), contrast=0.96,
                   curve="0/0.075 0.25/0.30 0.5/0.56 0.75/0.80 1/0.97", vignette=0.15),
 }
@@ -74,7 +76,8 @@ def _grade(src, ss, pre):
     mid = a[(a.max(1) > 0.08) & (a.min(1) < 0.95)]                    # ignore blown highlights / crushed blacks
     mid = mid if len(mid) > 100 else a
     m = mid.mean(0)
-    gains = np.clip((m.mean() / np.maximum(m, 1e-3)) ** 0.5, 0.88, 1.12)   # half-strength grey-world white balance
+    wb = LOOKS[LOOK].get('wb', 0.5)
+    gains = np.clip((m.mean() / np.maximum(m, 1e-3)) ** wb, 0.82, 1.18)    # grey-world white balance (strength per look)
     luma = float((a @ np.array([0.2126, 0.7152, 0.0722])).mean())
     mx, mn = a.max(1), a.min(1)
     sat = float(np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-3), 0).mean())
@@ -87,7 +90,8 @@ def _grade(src, ss, pre):
 
 def film_filter():
     L = LOOKS[LOOK]
-    return (f"curves=all='{L['curve']}',colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,"
+    cb = 'colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,' if L.get('warm', True) else ''
+    return (f"curves=all='{L['curve']}',{cb}"
             f"vignette=angle={L['vignette']},noise=alls=4:allf=t")
 
 
