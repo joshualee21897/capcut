@@ -54,7 +54,7 @@ LOOKS = {
                     curve="0/0.03 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.2),
     'mid': dict(luma=0.50, sat=0.28, sat_rng=(0.9, 1.2), contrast=1.02, wb=0.6, warmth=0.5, grain=0, clean=True,
                 curve="0/0.035 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.18),
-    'mid_warm': dict(luma=0.51, sat=0.28, sat_rng=(0.9, 1.2), contrast=1.02, wb=0.45, warmth=0.8, grain=0, clean=True,
+    'mid_warm': dict(luma=0.51, sat=0.28, sat_rng=(0.82, 1.3), contrast=1.02, wb=0.8, warmth=0.8, grain=0, clean=True,   # strong per-clip matching, then one shared warmth
                      curve="0/0.035 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.18),
     'light': dict(luma=0.56, sat=0.24, sat_rng=(0.78, 1.0), contrast=0.96,
                   curve="0/0.075 0.25/0.30 0.5/0.56 0.75/0.80 1/0.97", vignette=0.15),

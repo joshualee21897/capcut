@@ -6,7 +6,7 @@ Structure: hook (best reaction) -> glitch rewind -> voiceover A (both explain, o
 usage: EDIT_SCALE=1 python3 episodes/ep03_bridal_party/render.py <out.mp4>
 """
 import sys, os, json
-os.environ.setdefault('EDIT_LOOK', 'natural')        # neutral, saturated look matched to Rochelle's reference
+os.environ.setdefault('EDIT_LOOK', 'mid_warm')       # option C (Rochelle's pick): clips matched to each other first, then warmed
 from pathlib import Path
 from PIL import Image, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'tools'))
