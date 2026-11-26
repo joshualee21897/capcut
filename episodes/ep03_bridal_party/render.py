@@ -48,17 +48,16 @@ CAP_Y, CALL_Y = 760, 1290
 HOOK = (BURGER_CLIP, 50.45, 58.45)   # she reads the card aloud: 'you know, I can't say I do without you… so… oh!' then the blooper cut
 # many short reactions (2-4s), faces always in frame; optional 4th item = typed caption
 M38, M41, M98 = B + 'IMG_8838.MOV', B + 'IMG_8841.MOV', B + 'IMG_8598.MOV'
-HER = [(BURGER_CLIP, 8.6, 11.0, "oh my god what's this"),
-       (BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
-       (M38, 4.4, 7.6),                                     # bridesman: 'a burger for me?' (once)
-       (M98, 25.0, 28.4),                                   # couple lifting the giant burgers out
-       (M38, 56.0, 58.4), (M38, 58.3, 61.2),                # 'is that a snorlax?', shot glasses
-       (M98, 38.0, 41.0),                                   # couple reading their cards
+HER = [(BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
+       (M38, 4.4, 7.6),                                     # bridesman: 'a burger for me?'
+       (M98, 35.5, 42.8),                                   # couple reading their cards, she gets excited
+       (M38, 56.0, 58.4),                                   # 'is that a snorlax?'
        (M38, 84.4, 86.4),                                   # snorlax pillow 'oh my god'
-       (M41, 0.0, 2.4),                                     # 'never been cooler'
-       (BURGER_CLIP, 84.2, 86.4)]                           # 'oh my god, are you so cute?'
+       (M41, 0.5, 6.5, 'never been cooler'),                # donning every item
+       (BURGER_CLIP, 77.0, 80.3, '', ('smiski ring', '💍'))]   # showing off her Smiski ring
 HIS = [(G + 'IMG_1185.MOV', 39.6, 42.6), (G + 'IMG_1185.MOV', 64.0, 67.0),
-       (G + 'IMG_1185.MOV', 73.6, 76.0)]                    # close-ups, engaged; all well before the date
+       (G + 'IMG_1185.MOV', 73.6, 76.0),
+       (G + 'IMG_1185.MOV', 77.6, 81.5)]                    # they pull Joshua in for a hug (ends before the date)
 
 def react_words(path, a, b):
     key = path.replace('/home/user/footage_ep3/', '')
@@ -79,7 +78,9 @@ def add_reaction(path, a, b, text=None, trans='cut', label=None, afilter=''):
     t0 = now()
     shots.append(Shot(path, b - a, ss=a, zoom=(1.0, 1.04), trans=trans))
     og.append((path, a, b - a, t0, 1.0, afilter))
-    if text:                                                 # typed caption, spread over the clip
+    if text == '':                                           # no captions for this clip
+        ws = []
+    elif text:                                               # typed caption, spread over the clip
         tw = text.split()
         step = (b - a - 0.4) / len(tw)
         top.append(Karaoke([(w, t0 + 0.15 + i * step) for i, w in enumerate(tw)], t0 + (b - a), CAP_Y, 44, set()))
@@ -194,7 +195,8 @@ ov.append(Overlay(a_starts[3] + 0.1, a_ends[5], sprite_tag('his side', 44, '🏋
 # 4 full reactions
 t_her = now()
 for k, r in enumerate(HER):
-    add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('her side', '🍔') if k == 0 else None)
+    lab = r[4] if len(r) > 4 else (('her side', '🍔') if k == 0 else None)
+    add_reaction(*r[:4], trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=lab)
 t_his = now()
 for k, r in enumerate(HIS):
     add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('his side', '🏋️') if k == 0 else None)
