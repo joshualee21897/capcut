@@ -236,7 +236,7 @@ mapA = talk_block([
     (77.1, 84.0, 'J'),                                       # J: efficiency… one table, one take (2nd take)
 ])
 t_title = src_to_tl(mapA, 4.5); t_title_end = src_to_tl(mapA, 11.7)
-dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 20)
+dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 270)   # below their faces
 ov.append(Overlay(t_title, t_title_end, dim, (0, 0), 'fade', full=True))
 delays = {'tag1': 0.1, 'absolutlee': 0.35, 'i': 0.65, 'd': 0.8, 'ring': 1.0, 'tag2': 1.3,
           'emoji0': 1.5, 'emoji1': 1.6, 'emoji2': 1.7, 'emoji3': 1.8, 'emoji4': 1.9}
