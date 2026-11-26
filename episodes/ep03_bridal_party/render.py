@@ -327,11 +327,11 @@ t_f0, t_f1 = src_to_tl(mapA, 33.0), src_to_tl(mapA, 39.4)
 import random
 rnd = random.Random(7)
 for i, nm in enumerate(FLOOD):
-    spr = cutout_sprite(ITEMS2 + nm + '.png', rnd.randint(250, 330), outline=6)
-    if spr.width > 380:
-        spr = spr.resize((380, int(spr.height * 380 / spr.width)), Image.LANCZOS)
-    x = 190 + (i % 4) * 233 + rnd.randint(-40, 40)
-    y = 1450 - (i // 4) * 330 + rnd.randint(-50, 50)
+    spr = cutout_sprite(ITEMS2 + nm + '.png', rnd.randint(380, 460), outline=7)
+    if spr.width > 520:
+        spr = spr.resize((520, int(spr.height * 520 / spr.width)), Image.LANCZOS)
+    x = 150 + (i % 4) * 260 + rnd.randint(-40, 40)
+    y = 1700 - (i // 4) * 470 + rnd.randint(-60, 60)
     ov.append(Overlay(t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), t_f1, spr.rotate(rnd.randint(-14, 14), expand=True,
                       resample=Image.BICUBIC), (x, y), 'slide_up', safe=False))
     hit('pop', t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), 0.3)
