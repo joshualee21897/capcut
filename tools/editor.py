@@ -92,7 +92,7 @@ def film_filter():
     L = LOOKS[LOOK]
     cb = 'colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,' if L.get('warm', True) else ''
     return (f"curves=all='{L['curve']}',{cb}"
-            f"vignette=angle={L['vignette']},noise=alls=4:allf=t")
+            f"vignette=angle={L['vignette']},noise=alls=2:allf=t")
 
 
 def _proxy(shot):
@@ -400,7 +400,7 @@ def render(shots, overlays, sfx, og_audio, out_path, vo_path=None, total=None):
     if os.environ.get('AUDIO_ONLY'):
         return _mux(silent, total, sfx, og_audio, out_path, vo_path)
     enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{OW}x{OH}',
-                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18',
+                            '-r', str(FPS), '-i', '-', '-c:v', 'libx264', '-preset', 'medium', '-crf', '15', '-tune', 'film',
                             '-pix_fmt', 'yuv420p', silent], stdin=subprocess.PIPE)
     starts = np.cumsum([0] + [s.dur for s in shots])
     white = Image.new('RGB', (OW, OH), (255, 255, 255))

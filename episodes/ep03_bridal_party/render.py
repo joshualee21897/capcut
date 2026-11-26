@@ -50,15 +50,15 @@ HOOK = (BURGER_CLIP, 50.45, 58.45)   # she reads the card aloud: 'you know, I ca
 M38, M41, M98 = B + 'IMG_8838.MOV', B + 'IMG_8841.MOV', B + 'IMG_8598.MOV'
 HER = [(BURGER_CLIP, 8.6, 11.0, "oh my god what's this"),
        (BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
-       (M38, 4.4, 7.6), (M38, 10.0, 12.0),
-       (M38, 56.0, 58.4), (M38, 58.3, 62.7),
-       (M38, 84.4, 86.4), (M38, 90.0, 93.4),
-       (M41, 0.0, 2.4), (M41, 8.0, 11.6),
-       (M98, 88.0, 90.5),
-       (BURGER_CLIP, 76.0, 77.2), (BURGER_CLIP, 84.2, 86.4)]
-HIS = [(G + 'IMG_1185.MOV', 0.0, 3.6), (G + 'IMG_1185.MOV', 5.2, 7.2, 'wooo'),
-       (G + 'IMG_1185.MOV', 58.6, 61.6), (G + 'IMG_1185.MOV', 70.8, 73.4, 'congratulations')]   # all well before the date
-
+       (M38, 4.4, 7.6),                                     # bridesman: 'a burger for me?' (once)
+       (M98, 25.0, 28.4),                                   # couple lifting the giant burgers out
+       (M38, 56.0, 58.4), (M38, 58.3, 61.2),                # 'is that a snorlax?', shot glasses
+       (M98, 38.0, 41.0),                                   # couple reading their cards
+       (M38, 84.4, 86.4),                                   # snorlax pillow 'oh my god'
+       (M41, 0.0, 2.4),                                     # 'never been cooler'
+       (BURGER_CLIP, 84.2, 86.4)]                           # 'oh my god, are you so cute?'
+HIS = [(G + 'IMG_1185.MOV', 39.6, 42.6), (G + 'IMG_1185.MOV', 64.0, 67.0),
+       (G + 'IMG_1185.MOV', 73.6, 76.0)]                    # close-ups, engaged; all well before the date
 
 def react_words(path, a, b):
     key = path.replace('/home/user/footage_ep3/', '')
