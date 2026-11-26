@@ -52,6 +52,10 @@ LOOKS = {
                     curve="0/0.035 0.25/0.24 0.5/0.5 0.75/0.765 1/0.97", vignette=0.32),
     'natural': dict(luma=0.50, sat=0.29, sat_rng=(0.9, 1.3), contrast=1.02, wb=1.0, warm=False,
                     curve="0/0.03 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.2),
+    'mid': dict(luma=0.50, sat=0.28, sat_rng=(0.9, 1.2), contrast=1.02, wb=0.6, warmth=0.5, grain=0, clean=True,
+                curve="0/0.035 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.18),
+    'mid_warm': dict(luma=0.51, sat=0.28, sat_rng=(0.9, 1.2), contrast=1.02, wb=0.45, warmth=0.8, grain=0, clean=True,
+                     curve="0/0.035 0.25/0.245 0.5/0.505 0.75/0.765 1/0.975", vignette=0.18),
     'light': dict(luma=0.56, sat=0.24, sat_rng=(0.78, 1.0), contrast=0.96,
                   curve="0/0.075 0.25/0.30 0.5/0.56 0.75/0.80 1/0.97", vignette=0.15),
 }
@@ -90,9 +94,13 @@ def _grade(src, ss, pre):
 
 def film_filter():
     L = LOOKS[LOOK]
-    cb = 'colorbalance=rh=0.025:gh=0.008:bh=-0.02:rs=-0.012:bs=0.015,' if L.get('warm', True) else ''
-    return (f"curves=all='{L['curve']}',{cb}"
-            f"vignette=angle={L['vignette']},noise=alls=2:allf=t")
+    k = L.get('warmth', 1.0 if L.get('warm', True) else 0.0)
+    cb = (f'colorbalance=rh={0.025 * k:.4f}:gh={0.008 * k:.4f}:bh={-0.02 * k:.4f}:rs={-0.012 * k:.4f}:bs={0.015 * k:.4f},'
+          if k else '')
+    clean = 'hqdn3d=1.5:1.2:3:3,unsharp=5:5:0.55:5:5:0,' if L.get('clean') else ''
+    grain = L.get('grain', 2)
+    return (f"{clean}curves=all='{L['curve']}',{cb}vignette=angle={L['vignette']}"
+            + (f",noise=alls={grain}:allf=t" if grain else ''))
 
 
 def _proxy(shot):

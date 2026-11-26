@@ -51,10 +51,9 @@ M38, M41, M98 = B + 'IMG_8838.MOV', B + 'IMG_8841.MOV', B + 'IMG_8598.MOV'
 HER = [(BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
        (M38, 4.4, 7.6),                                     # bridesman: 'a burger for me?'
        (M98, 35.5, 42.8),                                   # couple reading their cards, she gets excited
-       (M38, 56.0, 58.4),                                   # 'is that a snorlax?'
        (M38, 84.4, 86.4),                                   # snorlax pillow 'oh my god'
        (M41, 0.5, 6.5, 'never been cooler'),                # donning every item
-       (BURGER_CLIP, 77.0, 80.3, '', ('smiski ring', '💍'))]   # showing off her Smiski ring
+       (BURGER_CLIP, 75.9, 80.3, 'this is so cool', ('smiski ring', '💍'))]   # 'this is so cool' + showing off her Smiski ring
 HIS = [(G + 'IMG_1185.MOV', 39.6, 42.6), (G + 'IMG_1185.MOV', 64.0, 67.0),
        (G + 'IMG_1185.MOV', 73.6, 76.0),
        (G + 'IMG_1185.MOV', 77.6, 81.5)]                    # they pull Joshua in for a hug (ends before the date)
@@ -146,8 +145,6 @@ for words, t1 in [([('you', 50.5), ('know', 51.16), ("i can't", 51.8), ('say', 5
                   ([('i', 52.64), ('do', 53.6), ('without', 53.88), ('you', 54.38)], 55.8),
                   ([('so', 55.9), ('oh', 56.64), ('i', 57.6), ("didn't", 57.8), ('know', 58.05)], 58.45)]:
     top.append(Karaoke([(w, t - HOOK[1]) for w, t in words], t1 - HOOK[1], CAP_Y, 44, set()))
-ov.append(Overlay(0.2, HOOK[2] - HOOK[1], sprite_tag('proposing to our bridal party', 40, '💍'), (W / 2, 300), 'bounce'))
-hit('click', 0.2, 0.5)
 
 # 2 blooper 'no signal' glitch (colour bars + beep) straight after the hook
 t_g = now()
@@ -219,10 +216,6 @@ t_col = now()
 shots.append(Shot(str(col), CDUR, zoom=(1.0, 1.03), trans='flash'))
 for src, t, lab in YES:
     og.append((src, t - LEAD, CDUR, t_col, 0.8))
-for i, (src, t, lab) in enumerate(YES):                     # small labels on each tile
-    x = W / 4 + (W / 2) * (i % 2)
-    y = (H / 4 - 330) + (H / 2) * (i // 2) + 120
-    ov.append(Overlay(t_col + 0.2, t_col + CDUR, sprite_tag(lab, 34), (x, max(y, 230)), 'pop', fade_out=False, safe=False))
 t_yes = t_col + 0.15
 for i, (spr, (dx, dy)) in enumerate(callout_lines([('they all said', 90, 'c'), ('YES!', 300, 'c')], ['💍', '🥹'], emoji_size=150)):
     top.append(Overlay(t_yes + 0.1 * i, t_col + CDUR, spr, (W / 2 + dx, H / 2 + dy), 'bounce',
