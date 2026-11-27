@@ -51,9 +51,9 @@ M38, M41, M98 = B + 'IMG_8838.MOV', B + 'IMG_8841.MOV', B + 'IMG_8598.MOV'
 HER = [(BURGER_CLIP, 39.6, 43.0, "i can't believe you customised this leh"),
        (M38, 4.4, 7.6),                                     # bridesman: 'a burger for me?'
        (M98, 35.5, 42.8),                                   # couple reading their cards, she gets excited
-       (M38, 84.4, 86.4),                                   # snorlax pillow 'oh my god'
+       (M38, 84.7, 86.0),                                   # snorlax pillow 'oh my god' (tightened)
        (M41, 0.5, 6.5, 'never been cooler'),                # donning every item
-       (BURGER_CLIP, 75.9, 80.3, 'this is so cool', ('smiski ring', '💍'))]   # 'this is so cool' + showing off her Smiski ring
+       (BURGER_CLIP, 75.9, 78.6, 'this is so cool', ('smiski ring', '💍'))]   # 'this is so cool' + showing off her Smiski ring
 HIS = [(G + 'IMG_1185.MOV', 39.6, 42.6), (G + 'IMG_1185.MOV', 64.0, 67.0),
        (G + 'IMG_1185.MOV', 73.6, 76.0),
        (G + 'IMG_1185.MOV', 77.6, 81.5)]                    # they pull Joshua in for a hug (ends before the date)
@@ -130,15 +130,16 @@ def vo_block(script, callouts, plan, wps=3.5):
 
 
 # ---------------------------------------------------------------- talking-head blocks (Rochelle left, Joshua right)
-TALK = '/home/user/footage_ep3/talk/IMG_9663.MOV'
+TALK = '/home/user/footage_ep3/new/IMG_9662.MOV'                 # 2nd recording: louder, no muffled lines
 TALK_AUDIO = '/home/user/footage_ep3/talk/talk_clean.wav'           # wind/noise removed, EQ'd, levelled
-TW_ = json.load(open('/home/user/footage_ep3/talk/talk_words.json'))
-FIX = {'correctors': 'characters', 'teamed': 'themed', "smiski's": 'smiski', 'personalized': 'personalised',
+TW_ = json.load(open('/home/user/footage_ep3/new/talk62_words.json'))
+FIX = {'correctors': 'characters', 'teamed': 'themed', 'teamed,': 'themed', 'ask': 'asked', "smiski's": 'smiski', 'personalized': 'personalised',
        'favorite': 'favourite'}
 FRAMES = {'both': ((1.2, 1.24), (0.5, 0.55)), 'R': ((1.85, 1.92), (0.33, 0.43)), 'J': ((1.85, 1.92), (0.69, 0.42)),
           'R2': ((1.45, 1.5), (0.36, 0.47)), 'J2': ((1.45, 1.5), (0.66, 0.46))}
 ITEMS = '/home/user/edit_cache/items/'
 ITEMS2 = '/home/user/edit_cache/items2/'
+ITEMS3 = '/home/user/edit_cache/items3/'
 COUPLE = '/root/.claude/uploads/486170bb-8ec7-5d42-92d8-a87d4f85fa4a/5482b717-image.jpg'   # Rochelle's edited couple photo
 
 
@@ -155,12 +156,13 @@ def cover_collage():
     for i, (f, cen) in enumerate(tops):
         im = ImageOps.exif_transpose(Image.open(f)).convert('RGB')
         c.paste(ImageOps.fit(im, (W // 3, H // 2), centering=cen), (i * W // 3, 0))
-    tbl = CACHE / 'table_frame.png'
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', '30', '-i', G + 'IMG_1185.MOV', '-frames:v', '1', str(tbl)], check=True)
-    c.paste(ImageOps.fit(Image.open(tbl).convert('RGB'), (W, H // 2), centering=(0.55, 0.55)), (0, H // 2))
+    for j, (t, cen) in enumerate([(64.3, (0.42, 0.45)), (73.6, (0.45, 0.4)), (78.2, (0.55, 0.4))]):
+        fp = CACHE / f'gm_close_{j}.png'
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-ss', str(t), '-i', G + 'IMG_1185.MOV', '-frames:v', '1', str(fp)], check=True)
+        c.paste(ImageOps.fit(Image.open(fp).convert('RGB'), (W // 3, H // 2), centering=cen), (j * W // 3, H // 2))
     d = ImageDraw.Draw(c)
     for x in (W // 3, 2 * W // 3):
-        d.line((x, 0, x, H // 2), fill=(250, 248, 244), width=8)
+        d.line((x, 0, x, H), fill=(250, 248, 244), width=8)
     d.line((0, H // 2, W, H // 2), fill=(250, 248, 244), width=8)
     out = c.convert('RGBA')
     series_title(out, '[ ep 2: the bridal party ]', cy=H // 2)
@@ -171,7 +173,7 @@ def cover_collage():
 
 def clean_talk_seg(a, b):
     """Level this segment's speech to a common loudness FIRST, then denoise/EQ, so quiet parts aren't eaten."""
-    out = CACHE / f'talkseg_{a:.2f}_{b:.2f}.wav'
+    out = CACHE / f'talkseg62_{a:.2f}_{b:.2f}.wav'
     if out.exists():
         return str(out)
     raw = np.frombuffer(subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{a}', '-t', f'{b - a}', '-i', TALK, '-map', '0:a:0',
@@ -289,14 +291,14 @@ hit('beep', t_g + 0.12, 0.55)
 
 # 3 you two explain (talking-head clip, retakes removed, jump cuts at pauses, reframed per speaker)
 mapA = talk_block([
-    (4.5, 11.8, 'both'),                                     # R: welcome (title card on top)
-    (22.2, 28.8, 'J'),                                       # J: 'you'll notice the difference…' (2nd take)
-    (29.5, 46.3, [(29.5, 'R'), (39.6, 'both'), (44.4, ('clip', B + 'IMG_8593.MOV', 0.2))]),   # R … 'didn't even fit' = the overflow bag
-    (46.5, 60.8, [(46.5, 'J'), (58.0, 'both')]),            # J: gym bag… getting jacked
-    (64.6, 67.7, 'both'),                                    # R: every single guy… (J's face)
-    (77.1, 84.0, [(77.1, 'J'), (79.5, ('clip', G + 'IMG_1185.MOV', 29.0))]),   # J … 'asked them all at once' = the table
+    (3.0, 10.9, 'both'),                                     # R: welcome… (cover collage on top)
+    (11.3, 17.5, 'J'),                                       # J: you'll notice the difference… burger vs gym bag
+    (17.9, 34.9, [(17.9, 'R'), (27.7, 'both'), (33.0, ('clip', B + 'IMG_8593.MOV', 0.2))]),   # R … didn't fit = overflow bag
+    (35.4, 47.9, [(35.4, 'J'), (46.0, 'both')]),            # J: gym bag list… getting jacked
+    (48.6, 51.7, 'both'),                                    # R: every single guy…
+    (51.7, 58.9, [(51.7, 'J'), (53.8, ('clip', G + 'IMG_1185.MOV', 29.0))]),   # J: efficiency… all at once = the table
 ])
-t_title = src_to_tl(mapA, 4.5); t_title_end = src_to_tl(mapA, 11.7)
+t_title = src_to_tl(mapA, 3.2); t_title_end = src_to_tl(mapA, 10.8)
 dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 270)   # below their faces
 ov.append(Overlay(t_title, t_title_end, dim, (0, 0), 'fade', full=True))
 delays = {'tag1': 0.1, 'absolutlee': 0.35, 'i': 0.65, 'd': 0.8, 'ring': 1.0, 'tag2': 1.3,
@@ -309,48 +311,40 @@ for name, spr, c in parts:
     if snd:
         hit(snd, t0, 0.5)
 top[:] = [o for o in top if not (isinstance(o, Karaoke) and t_title <= o.t0 < t_title_end - 0.2)]
-# cover collage on "…where we propose to our bridal party, because we can't say I do without them"
-t_col0, t_col1 = src_to_tl(mapA, 7.85), src_to_tl(mapA, 11.75)
+# cover collage on "…where we propose to our bridal team, because we can't say I do without them"
+t_col0, t_col1 = src_to_tl(mapA, 6.1), src_to_tl(mapA, 10.8)
 ov.append(Overlay(t_col0, t_col1, cover_collage(), (0, 0), 'fade', full=True))
 hit('shutter', t_col0, 0.5)
 # Joshua: "one of us bought a giant burger" (Rochelle's photo stays) "…and the other bought a gym bag" (Joshua's photo)
 pr = polaroid(B + 'IMG_0571.JPG', width=400, angle=-5)
 pj = polaroid(G + 'IMG_6588.HEIC', width=400, angle=5)
-t_b, t_g2, t_e = src_to_tl(mapA, 26.3), src_to_tl(mapA, 28.2), src_to_tl(mapA, 28.75) + 0.6
+t_b, t_g2, t_e = src_to_tl(mapA, 14.9), src_to_tl(mapA, 16.9), src_to_tl(mapA, 17.4) + 0.5
 ov.append(Overlay(t_b, t_e, pr, (300, 520), 'drop')); hit('shutter', t_b + 0.3, 0.5)
 ov.append(Overlay(t_g2, t_e, pj, (780, 560), 'drop')); hit('shutter', t_g2 + 0.3, 0.5)
-item_pop(mapA, 31.0, 'bm_burger', (800, 470), dur=1.8)
-# "everyone had something similar but personalised… favourite brands or characters": everything floods up
-FLOOD = ['b8424_1', 'b8414_1', 'b8408_1', 'b8408_2', 'b8409_1', 'b8399_1', 'b8418_1', 'b8421_1', 'b8411_1',
-         'b8406_1', 'b8531_1', 'b8396_1', 'b8403_2', 'b8421_3']
-t_f0, t_f1 = src_to_tl(mapA, 33.0), src_to_tl(mapA, 39.4)
-import random
-rnd = random.Random(7)
-for i, nm in enumerate(FLOOD):
-    spr = cutout_sprite(ITEMS2 + nm + '.png', rnd.randint(380, 460), outline=7)
-    if spr.width > 520:
-        spr = spr.resize((520, int(spr.height * 520 / spr.width)), Image.LANCZOS)
-    x = 150 + (i % 4) * 260 + rnd.randint(-40, 40)
-    y = 1700 - (i // 4) * 470 + rnd.randint(-60, 60)
-    ov.append(Overlay(t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), t_f1, spr.rotate(rnd.randint(-14, 14), expand=True,
-                      resample=Image.BICUBIC), (x, y), 'slide_up', safe=False))
-    hit('pop', t_f0 + i * ((t_f1 - t_f0 - 1.2) / len(FLOOD)), 0.3)
-callout_at(mapA, 44.8, [("DIDN'T", 150, 'l'), ('FIT', 260, 'r')], ['😭', '📏'])
+item_pop(mapA, 20.4, 'bm_burger', (800, 470), dur=1.6)
+# "everyone got something similar but personalised… characters and brands": the 4 packed sets slide up and fill the screen
+t_p0, t_p1 = src_to_tl(mapA, 22.3), src_to_tl(mapA, 27.6)
+for k, (pk, (x, y, r)) in enumerate(zip(['IMG_8506', 'IMG_8521', 'IMG_8536', 'IMG_8548'],
+                                         [(300, 560, -8), (780, 640, 6), (330, 1180, 5), (770, 1300, -6)])):
+    pol = polaroid(B + pk + '.HEIC', width=520, angle=r)
+    ov.append(Overlay(t_p0 + 0.35 * k, t_p1, pol, (x, y), 'slide_up', safe=False))
+    hit('shutter', t_p0 + 0.35 * k + 0.4, 0.4)
+callout_at(mapA, 33.6, [("DIDN'T", 150, 'l'), ('FIT', 260, 'r')], ['😭', '📏'])
 # Joshua's list: the gym bag alone, then each item
-def item2(src_t, nm, pos, h=340, dur=1.3):
+def item2(src_t, nm, pos, h=340, dur=1.0):
     t = src_to_tl(mapA, src_t)
-    spr = cutout_sprite(ITEMS2 + nm + '.png', h, outline=6)
+    spr = cutout_sprite(nm + '.png', h, outline=6)
     if spr.width > 460:
         spr = spr.resize((460, int(spr.height * 460 / spr.width)), Image.LANCZOS)
     ov.append(Overlay(t, t + dur, spr, pos, 'bounce', 6 if pos[0] > W / 2 else -6)); hit('pop', t, 0.5)
-item2(48.4, 'gm_bag_only', (540, 520), h=420, dur=2.6)
-item2(52.6, 'g6556_1', (790, 470)); item2(53.7, 'g6554_1', (290, 470), h=380); item2(54.7, 'g6582_1', (790, 470))
-item2(55.9, 'g6560_1', (290, 470)); item2(57.2, 'g6553_1', (790, 470))
-callout_at(mapA, 58.6, [('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️'])
-callout_at(mapA, 66.4, [('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪'])
-callout_at(mapA, 81.3, [('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅'], dur=2.6)
-ov.append(Overlay(src_to_tl(mapA, 29.6), src_to_tl(mapA, 46.2), sprite_tag('her side', 44, '🍔'), (W / 2, 300), 'bounce'))
-ov.append(Overlay(src_to_tl(mapA, 46.6), src_to_tl(mapA, 83.9), sprite_tag('his side', 44, '🏋️'), (W / 2, 300), 'bounce'))
+item2(36.8, ITEMS2 + 'gm_bag_only', (540, 520), h=420, dur=2.6)
+item2(40.0, ITEMS2 + 'g6556_1', (790, 470)); item2(41.2, ITEMS2 + 'g6554_1', (290, 470), h=380)
+item2(42.3, ITEMS2 + 'g6582_1', (790, 470)); item2(43.4, ITEMS2 + 'g6560_1', (290, 470)); item2(44.8, ITEMS2 + 'g6553_1', (790, 470))
+callout_at(mapA, 46.3, [('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️'])
+callout_at(mapA, 50.6, [('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪'])
+callout_at(mapA, 56.4, [('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅'], dur=2.6)
+ov.append(Overlay(src_to_tl(mapA, 18.0), src_to_tl(mapA, 34.8), sprite_tag('her side', 44, '🍔'), (W / 2, 300), 'bounce'))
+ov.append(Overlay(src_to_tl(mapA, 35.5), src_to_tl(mapA, 58.8), sprite_tag('his side', 44, '🏋️'), (W / 2, 300), 'bounce'))
 
 # 4 full reactions
 t_her = now()
@@ -362,14 +356,17 @@ for k, r in enumerate(HIS):
     add_reaction(*r, trans=('flash' if k == 0 else 'punch' if k % 2 else 'whip'), label=('his side', '🏋️') if k == 0 else None)
 
 # 5 Smiski lines + 'and they all said…' (talking-head)
-mapB = talk_block([(86.2, 90.9, 'R'), (91.2, 94.7, 'J'), (102.9, 105.2, 'both')])
-item_pop(mapB, 89.6, '../items2/b8403_2', (800, 450), dur=2.0)
-item_pop(mapB, 92.6, '../items2/gm_tag_big', (280, 470), h=420, dur=2.2)
-callout_at(mapB, 87.1, [('SMISKI', 200, 'c'), ('coded wedding', 80, 'c')], ['💍', '🧳'], dur=1.8)
+mapB = talk_block([(62.9, 71.3, 'both'), (80.5, 82.5, 'both')])
+t_sm = src_to_tl(mapB, 66.6)
+for path, pos, h in [(ITEMS3 + 'rings_8', (300, 560), 300), (ITEMS2 + 'gm_tag_big', (780, 560), 420)]:
+    spr = cutout_sprite(path + '.png', h, outline=7)
+    ov.append(Overlay(t_sm, src_to_tl(mapB, 71.2), spr, pos, 'bounce', 6 if pos[0] > W / 2 else -6))
+hit('pop', t_sm, 0.5)
+callout_at(mapB, 64.3, [('SMISKI', 200, 'c'), ('coded wedding', 80, 'c')], ['💍', '🧳'], dur=1.9)
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
-YES = [(BURGER_CLIP, 80.35, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.14, 'bridesman'),
-       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 65.5, 'groomsmen')]
+YES = [(BURGER_CLIP, 80.35, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.7, 'bridesman'),
+       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 73.2, 'groomsmen')]
 LEAD, CDUR = 0.12, 2.6                                      # every tile starts right on its yes
 col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR, 'collage_yes.mp4')
 t_col = now()
@@ -390,6 +387,10 @@ if os.environ.get('PLAN_ONLY'):
     print('total', round(TOTAL, 2))
     for o_ in og: print('OG', [round(v, 2) if isinstance(v, float) else (v[-30:] if isinstance(v, str) else v) for v in o_[:5]])
     sys.exit()
+kars = sorted([o for o in top if isinstance(o, Karaoke)], key=lambda o: o.t0)
+for k1, k2 in zip(kars, kars[1:]):                            # one caption line on screen at a time
+    if k1.t1 > k2.t0 - 0.02:
+        k1.t1 = k2.t0 - 0.02
 out = sys.argv[1]
 total = render(shots, ov + top, sfx, og, out, None, TOTAL)
 print('rendered', out, f'{total:.1f}s')

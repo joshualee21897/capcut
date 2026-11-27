@@ -701,7 +701,7 @@ def build_captions(toks, highlight=(), max_chars=32, y=1400, size=44, y_at=None)
     kar = []
     for i, ln in enumerate(lines):
         nxt = lines[i + 1][0]['s'] if i + 1 < len(lines) else None
-        end = min(ln[-1]['e'] + 0.4, nxt) if nxt else ln[-1]['e'] + 0.6
+        end = min(ln[-1]['e'] + 0.4, nxt - 0.02) if nxt else ln[-1]['e'] + 0.6
         yy = y_at(ln[0]['s']) if y_at else y
         kar.append(Karaoke([(x['w'], x['s']) for x in ln], end, yy, size, highlight))
     return kar, [(' '.join(p[0]), p[1], p[2]) for _, p in sorted(phrases.items())]
