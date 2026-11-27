@@ -360,8 +360,8 @@ mapA = talk_block([
 def cutaway(map_, src_a, src_b, clip, clip_in):
     """Replace the picture of [src_a, src_b] (talk time) with another clip; the talk audio keeps playing."""
     ta = src_to_tl(map_, src_a)
-    ends = [t0 + (se - ss) for ss, se, t0 in map_ if ss < src_b + 0.8 and se > src_a]
-    tb = max(ends)                                              # hold the cutaway to the very end of the sentence
+    ends = [t0 + (se - ss) for ss, se, t0 in map_ if ss <= src_b <= se + 0.6]   # only the piece holding the last word
+    tb = max(ends) if ends else src_to_tl(map_, src_b)                                              # hold the cutaway to the very end of the sentence
     out, t = [], 0.0
     for sh in shots:
         s0, s1 = t, t + sh.dur
@@ -453,9 +453,11 @@ callout_at(mapB, 64.3, [('SMISKI', 200, 'c'), ('coded wedding', 80, 'c')], ['ðŸ’
 
 # 6 ending: 'they all said yes' collage, everyone's YES lined up to land at the same moment
 YES = [(BURGER_CLIP, 80.35, 'bridesmaid'), (B + 'IMG_8838.MOV', 26.7, 'bridesman'),
-       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 5.5, 'groomsmen')]   # the 'wooo'
+       (B + 'IMG_8598.MOV', 51.64, 'bridesmaid'), (G + 'IMG_1185.MOV', 6.15, 'groomsmen')]   # the 'wooo' (6.1-6.9s), then arms up
 LEAD, CDUR = 0.12, 2.6                                      # every tile starts right on its yes
-col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR, 'collage_yes.mp4')
+import hashlib
+col = collage_clip([(src, t - LEAD) for src, t, _ in YES], CDUR,
+                  'collage_yes_' + hashlib.md5(repr(YES).encode()).hexdigest()[:8] + '.mp4')   # new file whenever tiles change
 t_col = now()
 shots.append(Shot(str(col), CDUR, zoom=(1.0, 1.03), trans='flash'))
 for src, t, lab in YES:
