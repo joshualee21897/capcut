@@ -491,7 +491,7 @@ def _mux(silent, total, sfx, og_audio, out_path, vo_path):
     for path, ss, dur, at, vol, *extra in og_audio:
         if dur < 0.2:                                   # slivers too short to fade cleanly: skip
             continue
-        inputs += ['-ss', f'{ss}', '-t', f'{dur}', '-i', path]
+        inputs += ['-ss', f'{max(ss, 0):.3f}', '-t', f'{dur:.3f}', '-i', path]
         pre = (extra[0] + ',') if extra and extra[0] else ''
         filters.append(f'[{k}:a]{pre}volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'
                        f'adelay={int(at * 1000)}|{int(at * 1000)}[a{k}]')

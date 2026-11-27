@@ -213,7 +213,10 @@ def word_end(t_end, limit):
     return min(i / 100 + 0.12, limit)
 
 
-def drop_pauses(pa, pb, min_gap=0.22, keep=0.06):
+MANUAL_GAPS = [(7.62, 7.86)]                                   # 'our bridal… team'
+
+
+def drop_pauses(pa, pb, min_gap=0.22, keep=0.06, ws=()):
     """Split [pa, pb] wherever the voice drops out for > min_gap (a hesitation), keeping a short breath each side."""
     word_end(pa, pa + 0.01)                                         # make sure the envelope is loaded
     env, floor = _ENV
@@ -229,8 +232,13 @@ def drop_pauses(pa, pb, min_gap=0.22, keep=0.06):
             k = j
             while k < len(quiet) and quiet[k]:
                 k += 1
-            if (k - j) / 100 > min_gap and j > 0 and k < len(quiet):
-                out.append((start, pa + j / 100 + keep)); start = pa + k / 100 - keep
+            q0, q1 = pa + j / 100, pa + k / 100
+            # only between words: never inside a word or its soft ending (s, t, k)
+            for w1, w2 in zip(ws, ws[1:]):
+                g0, g1 = max(q0, w1['e'] + 0.22), min(q1, w2['s'] - 0.03)
+                if g1 - g0 > min_gap and g0 > start + 0.1:
+                    out.append((start, g0 + keep)); start = g1 - keep
+                    break
             j = k
         else:
             j += 1
@@ -270,7 +278,9 @@ def talk_block(segs, cap_y=1400, gap_split=0.42):
             if nxt is not None and nxt - w['e'] > gap_split:
                 pieces.append((cur[0], word_end(w['e'], nxt - 0.06))); cur = [nxt - 0.08, None]
         pieces.append((cur[0], word_end(ws[-1]['e'], b) if ws else b))
-        pieces = [q for pa, pb in pieces for q in drop_pauses(pa, pb)]     # remove hesitations inside a phrase too
+        pieces = [q for pa, pb in pieces for q in drop_pauses(pa, pb, ws=ws)]
+        for g0, g1 in MANUAL_GAPS:                            # hand-picked hesitations (checked on the waveform)
+            pieces = [q for pa, pb in pieces for q in ([(pa, g0), (g1, pb)] if pa < g0 < g1 < pb else [(pa, pb)])]     # remove hesitations inside a phrase too
         frl = fr if isinstance(fr, list) else [(a, fr)]
         cuts = [t for t, _ in frl[1:]]
         split = []
