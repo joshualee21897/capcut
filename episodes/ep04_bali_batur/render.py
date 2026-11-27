@@ -107,13 +107,14 @@ polaroids([('IMG_5053.HEIC', 300, -6, (320, 820)), ('IMG_5057.HEIC', 300, 5, (76
 b = add('IMG_5097.MOV', 1.1, 3.0, trans='punch')
 add('IMG_0722.MOV', 1.1, 2.0, pan=(0.6, 0.5))
 add('IMG_0727.MOV', 1.2, 3.5)
-stamp('6:15am', 'sea of clouds', ('☁️', '🌋'), b, t)
+stamp('6:15am', 'sea of clouds', ('☁️', '🌋'), b, t, y=660)
 
 # --- 6:35am sun is up (sunrise only) -------------------------------------------------
 b = add('IMG_0761.MOV', 1.1, 3.0, trans='punch')
-add('IMG_0766.MOV', 1.2, 1.5)
+add('IMG_0769.MOV', 1.2, 1.0)
+add('IMG_0766.MOV', 1.0, 1.5)
 add('IMG_0765.MOV', 1.4, 5.0)
-stamp('6:35am', 'and there it is', ('☀️', '😍'), b, t)
+stamp('6:35am', 'and there it is', ('☀️', '😍'), b, t, y=660)
 
 # --- 7:40am black lava + photoshoot on the rocks -------------------------------------
 b = add('IMG_0777.MOV', 1.2, 2.5, trans='punch')
@@ -134,11 +135,12 @@ stamp('8:44am', 'back to our airbnb', ('🏠', '😴'), b, t)
 
 # --- end: book on klook ---------------------------------------------------------------
 e0 = add('IMG_5065.HEIC', 3.2, zoom=(1.0, 1.06))
-callout([('book on', 100, 'c', WHITE), ('klook', 210, 'c'), ('discount off klook experiences', 58, 'c', WHITE)],
-        None, e0 + 0.1, t, 460)
+callout([('book on', 100, 'c', WHITE), ('klook', 210, 'c')], None, e0 + 0.1, t, 440)
 top.append(Overlay(e0 + 0.4, t, sticker('🎟️', 100), (W / 2 + 230, 440), 'bounce', 7))
 top.append(Overlay(e0 + 0.5, t, sticker('🧡', 100), (W / 2 - 230, 450), 'bounce', -7))
-tag_in('use code ROCHELLEKLOOK', '🎟️', e0 + 0.8, t, 700)
+tag_in('use code ROCHELLEKLOOK', '🎟️', e0 + 0.6, t, 660)
+top.append(Overlay(e0 + 0.9, t, sprite_text('discount off klook experiences', font('bootzy', 62), WHITE, shadow=14, pad=24),
+                   (W / 2, 760), 'pop'))
 
 total = t
 print(f'total {total:.1f}s, {len(shots)} shots')
