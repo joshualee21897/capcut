@@ -489,6 +489,8 @@ def _mux(silent, total, sfx, og_audio, out_path, vo_path):
     inputs, filters, labels = ['-f', 'lavfi', '-t', f'{total:.3f}', '-i', 'anullsrc=r=44100:cl=stereo'], [], ['[1:a]']
     k = 2                                           # input 0 = video, 1 = silence bed
     for path, ss, dur, at, vol, *extra in og_audio:
+        if dur < 0.2:                                   # slivers too short to fade cleanly: skip
+            continue
         inputs += ['-ss', f'{ss}', '-t', f'{dur}', '-i', path]
         pre = (extra[0] + ',') if extra and extra[0] else ''
         filters.append(f'[{k}:a]{pre}volume={vol},afade=t=in:d=0.08,afade=t=out:st={dur - 0.15}:d=0.15,'

@@ -293,11 +293,33 @@ hit('beep', t_g + 0.12, 0.55)
 mapA = talk_block([
     (3.0, 10.9, 'both'),                                     # R: welcome… (cover collage on top)
     (11.3, 17.5, 'J'),                                       # J: you'll notice the difference… burger vs gym bag
-    (17.9, 34.9, [(17.9, 'R'), (27.7, 'both'), (33.0, ('clip', B + 'IMG_8593.MOV', 0.2))]),   # R … didn't fit = overflow bag
+    (17.9, 34.9, [(17.9, 'R'), (27.7, 'both')]),   # R … didn't fit = overflow bag
     (35.4, 47.9, [(35.4, 'J'), (46.0, 'both')]),            # J: gym bag list… getting jacked
     (48.6, 51.7, 'both'),                                    # R: every single guy…
-    (51.7, 58.9, [(51.7, 'J'), (53.8, ('clip', G + 'IMG_1185.MOV', 29.0))]),   # J: efficiency… all at once = the table
+    (51.7, 58.9, 'J'),   # J: efficiency… all at once = the table
 ])
+
+
+def cutaway(map_, src_a, src_b, clip, clip_in):
+    """Replace the picture of [src_a, src_b] (talk time) with another clip; the talk audio keeps playing."""
+    ta, tb = src_to_tl(map_, src_a), src_to_tl(map_, src_b)
+    out, t = [], 0.0
+    for sh in shots:
+        s0, s1 = t, t + sh.dur
+        t = s1
+        if s1 <= ta or s0 >= tb:
+            out.append(sh); continue
+        if s0 < ta:
+            out.append(Shot(sh.src, ta - s0, ss=sh.ss, zoom=(sh.zoom[0], sh.zoom[0]), pan=sh.pan, trans=sh.trans))
+        if s0 <= ta < s1 or (s0 >= ta and not any(o.src == clip and abs(o.ss - clip_in) < 1e-6 for o in out)):
+            out.append(Shot(clip, tb - ta, ss=clip_in, zoom=(1.0, 1.04), trans='cut'))
+        if s1 > tb:
+            out.append(Shot(sh.src, s1 - tb, ss=sh.ss + (tb - s0), zoom=(sh.zoom[0], sh.zoom[0]), pan=sh.pan, trans='cut'))
+    shots[:] = out
+
+
+cutaway(mapA, 33.0, 34.85, B + 'IMG_8593.MOV', 0.2)          # 'didn't even fit inside the burger' = the overflow bag
+cutaway(mapA, 53.8, 58.85, G + 'IMG_1185.MOV', 29.0)          # 'asked them all at once, one table, one take' = the table
 t_title = src_to_tl(mapA, 3.2); t_title_end = src_to_tl(mapA, 10.8)
 dim, parts = series_title_parts('[ ep 2: the bridal party ]', cy=H // 2 + 270)   # below their faces
 ov.append(Overlay(t_title, t_title_end, dim, (0, 0), 'fade', full=True))
