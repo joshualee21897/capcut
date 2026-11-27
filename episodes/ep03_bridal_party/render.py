@@ -213,6 +213,31 @@ def word_end(t_end, limit):
     return min(i / 100 + 0.12, limit)
 
 
+def drop_pauses(pa, pb, min_gap=0.22, keep=0.06):
+    """Split [pa, pb] wherever the voice drops out for > min_gap (a hesitation), keeping a short breath each side."""
+    word_end(pa, pa + 0.01)                                         # make sure the envelope is loaded
+    env, floor = _ENV
+    i0, i1 = int(pa * 100), int(pb * 100)
+    seg = env[i0:i1]
+    if len(seg) < 10:
+        return [(pa, pb)]
+    level = np.percentile(seg, 80)
+    quiet = seg < max(level * 0.16, floor * 1.6)                    # ~16 dB under the speech level
+    out, start, j = [], pa, 0
+    while j < len(quiet):
+        if quiet[j]:
+            k = j
+            while k < len(quiet) and quiet[k]:
+                k += 1
+            if (k - j) / 100 > min_gap and j > 0 and k < len(quiet):
+                out.append((start, pa + j / 100 + keep)); start = pa + k / 100 - keep
+            j = k
+        else:
+            j += 1
+    out.append((start, pb))
+    return [(a_, b_) for a_, b_ in out if b_ - a_ > 0.12]
+
+
 def talk_words(a, b):
     ws = [w for seg in TW_ for w in seg['words'] if a - 0.05 <= w['s'] < b]
     return [dict(w, w=FIX.get(w['w'].lower().strip('.,!?~'), w['w'])) for w in ws]
@@ -245,6 +270,7 @@ def talk_block(segs, cap_y=1400, gap_split=0.42):
             if nxt is not None and nxt - w['e'] > gap_split:
                 pieces.append((cur[0], word_end(w['e'], nxt - 0.06))); cur = [nxt - 0.08, None]
         pieces.append((cur[0], word_end(ws[-1]['e'], b) if ws else b))
+        pieces = [q for pa, pb in pieces for q in drop_pauses(pa, pb)]     # remove hesitations inside a phrase too
         frl = fr if isinstance(fr, list) else [(a, fr)]
         cuts = [t for t, _ in frl[1:]]
         split = []
@@ -316,14 +342,16 @@ mapA = talk_block([
     (11.3, 17.85, 'J'),                                       # J: you'll notice the difference… burger vs gym bag
     (17.9, 35.3, [(17.9, 'R'), (27.7, 'both')]),   # R … didn't fit = overflow bag
     (35.4, 48.45, [(35.4, 'J'), (46.0, 'both')]),            # J: gym bag list… getting jacked
-    (48.6, 51.68, 'both'),                                    # R: every single guy…
-    (51.7, 59.3, 'J'),   # J: efficiency… all at once = the table
+    (48.6, 52.05, 'both'),                                    # R: every single guy…
+    (52.12, 59.3, 'J'),   # J: efficiency… all at once = the table
 ])
 
 
 def cutaway(map_, src_a, src_b, clip, clip_in):
     """Replace the picture of [src_a, src_b] (talk time) with another clip; the talk audio keeps playing."""
-    ta, tb = src_to_tl(map_, src_a), src_to_tl(map_, src_b)
+    ta = src_to_tl(map_, src_a)
+    ends = [t0 + (se - ss) for ss, se, t0 in map_ if ss < src_b + 0.8 and se > src_a]
+    tb = max(ends)                                              # hold the cutaway to the very end of the sentence
     out, t = [], 0.0
     for sh in shots:
         s0, s1 = t, t + sh.dur
