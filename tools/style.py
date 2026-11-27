@@ -79,7 +79,7 @@ SERIES_EMOJIS = [('🤵', -0.36, -0.02, 105, -10), ('👰', 0.36, -0.02, 105, 10
 def tag(img, center, s, size=46, angle=0):
     """[ bracket label ] on a light-blue box."""
     f = font('caption_reg', size)
-    w, h = int(f.getlength(s)) + 44, size + 30
+    w, h = int(f.getlength(s)) + int(size * 0.96), int(size * 1.65)
     t = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(t)
     d.rectangle((0, 0, w, h), fill=TAG_BG)
@@ -168,50 +168,49 @@ def sticker(ch, size, outline=7):
 ABROAD_ORDER = ['absolutlee', 'abr', 'globe', 'ad', 'tag1', 'tag2', 'flag', 'cloud', 'sun', 'plane']
 
 
-def abroad_title(im, tag1, tag2, cy=H // 2, parts=None):
+def abroad_title(im, tag1, tag2, cy=H // 2, parts=None, k=1):
+    """k: layout scale (1 = 1080x1920 canvas, 2 = native 2160x3840 for a high-res cover)."""
     on = lambda n: parts is None or n in parts
+    Wk = W * k
     d = ImageDraw.Draw(im)
-    f1 = font('bootzy', 150)
-    f2 = font('bootzy', 300)
+    f1 = font('bootzy', int(150 * k))
+    big = 300 * k
+    f2 = font('bootzy', big)
+    o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
+    w_abr, w_ad, o_w = f2.getlength('abr'), f2.getlength('ad'), o_r - o_l
+    total = w_abr + o_w * 1.08 + w_ad
+    if total > 880 * k:                            # keep "abroad" inside the frame
+        f2 = font('bootzy', int(big * 880 * k / total))
     o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
     o_w, o_h = o_r - o_l, o_b - o_t
     gap = int(o_w * 0.04)
     w_abr, w_ad = f2.getlength('abr'), f2.getlength('ad')
     total = w_abr + gap + o_w + gap + w_ad
-    k = min(1.0, 880 / total)                      # keep "abroad" inside the frame
-    if k < 1:
-        f2 = font('bootzy', int(300 * k))
-        o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
-        o_w, o_h = o_r - o_l, o_b - o_t
-        gap = int(o_w * 0.04)
-        w_abr, w_ad = f2.getlength('abr'), f2.getlength('ad')
-        total = w_abr + gap + o_w + gap + w_ad
-    y1 = cy - 120
+    y1 = cy * k - 120 * k
     if on('absolutlee'):
-        text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
-    a_t, a_b = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1::2]
+        text(im, (Wk // 2, y1), 'absolutlee', f1, BUTTER, shadow=12 * k)
+    a_t, a_b = d.textbbox((Wk // 2, y1), 'absolutlee', font=f1, anchor='mm')[1::2]
     b_top = d.textbbox((0, 0), 'b', font=f2, anchor='ls')[1]
-    y2 = a_b - b_top + 4                            # baseline of "abroad", tucked under "absolutlee"
-    x = (W - total) / 2
+    y2 = a_b - b_top + 4 * k                        # baseline of "abroad", tucked under "absolutlee"
+    x = (Wk - total) / 2
     if on('abr'):
-        text(im, (x, y2), 'abr', f2, 'white', anchor='ls', shadow=16)
-    globe = int(o_h * 1.25)
+        text(im, (x, y2), 'abr', f2, 'white', anchor='ls', shadow=16 * k)
     if on('globe'):
-        paste_emoji(im, '🌍', (x + w_abr + gap + o_w / 2, y2 - o_h / 2), globe)
+        paste_emoji(im, '🌍', (x + w_abr + gap + o_w / 2, y2 - o_h / 2), int(o_h * 1.25))
     if on('ad'):
-        text(im, (x + w_abr + gap + o_w + gap, y2), 'ad', f2, 'white', anchor='ls', shadow=16)
+        text(im, (x + w_abr + gap + o_w + gap, y2), 'ad', f2, 'white', anchor='ls', shadow=16 * k)
     if on('tag1'):
-        tag(im, (W // 2 + 110, a_t - 55), tag1, 42, -3)
+        tag(im, (Wk // 2 + 110 * k, a_t - 55 * k), tag1, 42 * k, -3)
     if on('tag2'):
-        tag(im, (W // 2 - 160, y2 + 75), tag2, 42, 0)
+        tag(im, (Wk // 2 - 160 * k, y2 + 75 * k), tag2, 42 * k, 0)
     if on('flag'):
-        paste_emoji(im, '🇮🇩', (W // 2 - 350, a_t - 25), 90, 6)
+        paste_emoji(im, '🇮🇩', (Wk // 2 - 350 * k, a_t - 25 * k), 90 * k, 6)
     if on('cloud'):
-        paste_emoji(im, '☁️', (W // 2 - 258, a_t - 82), 70, -4)
+        paste_emoji(im, '☁️', (Wk // 2 - 258 * k, a_t - 82 * k), 70 * k, -4)
     if on('sun'):
-        paste_emoji(im, '☀️', (W // 2 + 220, y2 + 60), 80, 0)
+        paste_emoji(im, '☀️', (Wk // 2 + 220 * k, y2 + 60 * k), 80 * k, 0)
     if on('plane'):
-        paste_emoji(im, '✈️', (W // 2 + 330, y2 + 110), 90, -8)
+        paste_emoji(im, '✈️', (Wk // 2 + 330 * k, y2 + 110 * k), 90 * k, -8)
     return im
 
 
