@@ -20,7 +20,10 @@ EMOJI_CODES = {'📍': '1f4cd', '💸': '1f4b8', '🧵': '1f9f5', '🗓': '1f5d3
                '💪': '1f4aa', '🔖': '1f516', '🥳': '1f973', '🔥': '1f525', '🤔': '1f914', '💀': '1f480', '🥹': '1f979', '💗': '1f497', '💃': '1f483', '🧾': '1f9fe', '💯': '1f4af',
                '🍻': '1f37b', '🏋️': '1f3cb', '🔓': '1f513', '💼': '1f4bc', '👍': '1f44d', '👏': '1f44f',
                '💄': '1f484', '⚡': '26a1', '💇': '1f487', '👗': '1f457', '👠': '1f460', '🎨': '1f3a8',
-               '😭': '1f62d', '☝️': '261d', '🤭': '1f92d', '📱': '1f4f1', '😩': '1f629', '🙈': '1f648', '🎬': '1f3ac', '❌': '274c', '😘': '1f618', '💋': '1f48b', '😗': '1f617', '🍔': '1f354', '🧳': '1f9f3', '⏪': '23ea', '😂': '1f602', '🎁': '1f381'}
+               '😭': '1f62d', '☝️': '261d', '🤭': '1f92d', '📱': '1f4f1', '😩': '1f629', '🙈': '1f648', '🎬': '1f3ac', '❌': '274c', '😘': '1f618', '💋': '1f48b', '😗': '1f617', '🍔': '1f354', '🧳': '1f9f3', '⏪': '23ea', '😂': '1f602', '🇮🇩': '1f1ee-1f1e9', '☀️': '2600', '🌍': '1f30d', '🍜': '1f35c', '🌟': '1f31f', '🌌': '1f30c', '🌄': '1f304', '🌅': '1f305',
+               '☁️': '2601', '🚙': '1f699', '🚐': '1f690', '😴': '1f634', '🥱': '1f971', '🖤': '1f5a4', '🌋': '1f30b', '🌿': '1f33f',
+               '🎟️': '1f39f', '🧡': '1f9e1', '🍱': '1f371', '☕': '2615', '🌙': '1f319', '😋': '1f60b', '🤤': '1f924', '⭐': '2b50',
+               '🌠': '1f320', '🏔️': '1f3d4', '🚗': '1f697', '🌾': '1f33e', '🗻': '1f5fb', '🏞️': '1f3de', '🪨': '1faa8', '🎁': '1f381'}
 
 
 def font(kind, size):
@@ -156,4 +159,64 @@ def sticker(ch, size, outline=7):
     white.putalpha(a.filter(ImageFilter.GaussianBlur(1)))
     out.alpha_composite(white)
     out.alpha_composite(c)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# absolutlee abroad title (matches the accommodations cover): butter "absolutlee",
+# big white "abroad" with 🌍 as the o, blue tags top-right + left, 🇮🇩 ☀️ ✈️
+ABROAD_ORDER = ['absolutlee', 'abr', 'globe', 'ad', 'tag1', 'tag2', 'flag', 'sun', 'plane']
+
+
+def abroad_title(im, tag1, tag2, cy=H // 2, parts=None):
+    on = lambda n: parts is None or n in parts
+    d = ImageDraw.Draw(im)
+    f1 = font('bootzy', 150)
+    f2 = font('bootzy', 300)
+    o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
+    o_w, o_h = o_r - o_l, o_b - o_t
+    gap = int(o_w * 0.04)
+    w_abr, w_ad = f2.getlength('abr'), f2.getlength('ad')
+    total = w_abr + gap + o_w + gap + w_ad
+    k = min(1.0, 880 / total)                      # keep "abroad" inside the frame
+    if k < 1:
+        f2 = font('bootzy', int(300 * k))
+        o_l, o_t, o_r, o_b = d.textbbox((0, 0), 'o', font=f2, anchor='ls')
+        o_w, o_h = o_r - o_l, o_b - o_t
+        gap = int(o_w * 0.04)
+        w_abr, w_ad = f2.getlength('abr'), f2.getlength('ad')
+        total = w_abr + gap + o_w + gap + w_ad
+    y1 = cy - 120
+    if on('absolutlee'):
+        text(im, (W // 2, y1), 'absolutlee', f1, BUTTER, shadow=12)
+    a_t, a_b = d.textbbox((W // 2, y1), 'absolutlee', font=f1, anchor='mm')[1::2]
+    b_top = d.textbbox((0, 0), 'b', font=f2, anchor='ls')[1]
+    y2 = a_b - b_top + 4                            # baseline of "abroad", tucked under "absolutlee"
+    x = (W - total) / 2
+    if on('abr'):
+        text(im, (x, y2), 'abr', f2, 'white', anchor='ls', shadow=16)
+    globe = int(o_h * 1.25)
+    if on('globe'):
+        paste_emoji(im, '🌍', (x + w_abr + gap + o_w / 2, y2 - o_h / 2), globe)
+    if on('ad'):
+        text(im, (x + w_abr + gap + o_w + gap, y2), 'ad', f2, 'white', anchor='ls', shadow=16)
+    if on('tag1'):
+        tag(im, (W // 2 + 170, a_t - 55), tag1, 42, -3)
+    if on('tag2'):
+        tag(im, (W // 2 - 160, y2 + 75), tag2, 42, 0)
+    if on('flag'):
+        paste_emoji(im, '🇮🇩', (W // 2 - 330, a_t - 40), 90, 6)
+    if on('sun'):
+        paste_emoji(im, '☀️', (W // 2 + 220, y2 + 60), 80, 0)
+    if on('plane'):
+        paste_emoji(im, '✈️', (W // 2 + 330, y2 + 110), 90, -8)
+    return im
+
+
+def abroad_title_parts(tag1, tag2, cy=H // 2):
+    out = []
+    for n in ABROAD_ORDER:
+        layer = abroad_title(Image.new('RGBA', (W, H), (0, 0, 0, 0)), tag1, tag2, cy, {n})
+        bb = layer.getbbox()
+        out.append((n, layer.crop(bb), ((bb[0] + bb[2]) / 2, (bb[1] + bb[3]) / 2)))
     return out
