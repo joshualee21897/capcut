@@ -88,8 +88,7 @@ polaroids([('IMG_5027.heic', 290, -7, (270, 1000)), ('IMG_5029.heic', 290, 2, (5
 
 # --- 5:20am the hut + food (video only) ----------------------------------------------
 b = add('IMG_5036.MOV', 1.0, 0.2, trans='punch')
-add('IMG_0684.MOV', 2.0, 2.5)
-add('IMG_5036.MOV', 1.0, 8.4)
+add('IMG_0684.MOV', 1.6, 2.5)
 stamp('5:20am', 'cup noodles at the hut', ('🍜', '☕'), b, t)
 
 # --- 5:45am first light (timelapse) --------------------------------------------------
@@ -134,7 +133,7 @@ b = add('IMG_0820.MOV', 2.4, 0.2, trans='punch')
 stamp('8:44am', 'back to our airbnb', ('🏠', '😴'), b, t)
 
 # --- end: book on klook ---------------------------------------------------------------
-e0 = add('IMG_0725.MOV', 3.2, 19.0, zoom=(1.0, 1.04))
+e0 = add('IMG_5065.HEIC', 3.2, zoom=(1.0, 1.06))
 callout([('book on', 100, 'c', WHITE), ('klook', 210, 'c'), ('discount off klook experiences', 58, 'c', WHITE)],
         None, e0 + 0.1, t, 460)
 top.append(Overlay(e0 + 0.4, t, sticker('🎟️', 100), (W / 2 + 230, 440), 'bounce', 7))

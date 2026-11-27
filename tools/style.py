@@ -165,7 +165,7 @@ def sticker(ch, size, outline=7):
 # ---------------------------------------------------------------------------
 # absolutlee abroad title (matches the accommodations cover): butter "absolutlee",
 # big white "abroad" with 🌍 as the o, blue tags top-right + left, 🇮🇩 ☀️ ✈️
-ABROAD_ORDER = ['absolutlee', 'abr', 'globe', 'ad', 'tag1', 'tag2', 'flag', 'sun', 'plane']
+ABROAD_ORDER = ['absolutlee', 'abr', 'globe', 'ad', 'tag1', 'tag2', 'flag', 'cloud', 'sun', 'plane']
 
 
 def abroad_title(im, tag1, tag2, cy=H // 2, parts=None):
@@ -205,7 +205,9 @@ def abroad_title(im, tag1, tag2, cy=H // 2, parts=None):
     if on('tag2'):
         tag(im, (W // 2 - 160, y2 + 75), tag2, 42, 0)
     if on('flag'):
-        paste_emoji(im, '🇮🇩', (W // 2 - 330, a_t - 20), 90, 6)
+        paste_emoji(im, '🇮🇩', (W // 2 - 350, a_t - 25), 90, 6)
+    if on('cloud'):
+        paste_emoji(im, '☁️', (W // 2 - 258, a_t - 82), 70, -4)
     if on('sun'):
         paste_emoji(im, '☀️', (W // 2 + 220, y2 + 60), 80, 0)
     if on('plane'):
