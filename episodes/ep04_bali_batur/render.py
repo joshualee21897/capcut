@@ -100,13 +100,13 @@ b = add('IMG_0703.MOV', 2.0, 0.6, trans='punch')
 stamp('6:00am', 'sunrise photoshoot', ('📸', '🧡'), b, t + 3.2)
 tag_in('our driver is also our photographer', '📸', b + 0.3, t)
 pb = add('IMG_0707.MOV', 3.2, 2.5)
-polaroids([('IMG_5053.HEIC', 300, -6, (320, 820)), ('IMG_5057.HEIC', 300, 5, (760, 800)),
-           ('IMG_5062.HEIC', 300, 4, (330, 1250)), ('IMG_5091.heic', 300, -5, (760, 1270))], pb, t, gap=0.3)
+polaroids([('IMG_5053.HEIC', 270, -6, (330, 890)), ('IMG_5057.HEIC', 270, 5, (750, 870)),
+           ('IMG_5062.HEIC', 270, 4, (340, 1270)), ('IMG_5091.heic', 270, -5, (750, 1290))], pb, t, gap=0.3)
 
 # --- 6:15am sea of clouds ------------------------------------------------------------
 b = add('IMG_5097.MOV', 1.1, 3.0, trans='punch')
 add('IMG_0722.MOV', 1.1, 2.0, pan=(0.6, 0.5))
-add('IMG_0727.MOV', 1.2, 3.5)
+add('IMG_0716.MOV', 1.2, 1.0)
 stamp('6:15am', 'sea of clouds', ('☁️', '🌋'), b, t, y=660)
 
 # --- 6:35am sun is up (sunrise only) -------------------------------------------------
@@ -134,13 +134,13 @@ b = add('IMG_0820.MOV', 2.4, 0.2, trans='punch')
 stamp('8:44am', 'back to our airbnb', ('🏠', '😴'), b, t)
 
 # --- end: book on klook ---------------------------------------------------------------
-e0 = add('IMG_5065.HEIC', 3.2, zoom=(1.0, 1.06))
-callout([('book on', 100, 'c', WHITE), ('klook', 210, 'c')], None, e0 + 0.1, t, 440)
-top.append(Overlay(e0 + 0.4, t, sticker('🎟️', 100), (W / 2 + 230, 440), 'bounce', 7))
-top.append(Overlay(e0 + 0.5, t, sticker('🧡', 100), (W / 2 - 230, 450), 'bounce', -7))
-tag_in('use code ROCHELLEKLOOK', '🎟️', e0 + 0.6, t, 660)
+e0 = add('IMG_0727.MOV', 3.2, 2.2, zoom=(1.0, 1.0))
+callout([('book on', 100, 'c', WHITE), ('klook', 210, 'c')], None, e0 + 0.1, t, 700)
+top.append(Overlay(e0 + 0.4, t, sticker('🎟️', 100), (W / 2 + 230, 700), 'bounce', 7))
+top.append(Overlay(e0 + 0.5, t, sticker('🧡', 100), (W / 2 - 230, 710), 'bounce', -7))
+tag_in('use code ROCHELLEKLOOK', '🎟️', e0 + 0.6, t, 920)
 top.append(Overlay(e0 + 0.9, t, sprite_text('discount off klook experiences', font('bootzy', 62), WHITE, shadow=14, pad=24),
-                   (W / 2, 760), 'pop'))
+                   (W / 2, 1020), 'pop'))
 
 total = t
 print(f'total {total:.1f}s, {len(shots)} shots')
