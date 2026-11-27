@@ -1,17 +1,20 @@
-# AbsolutLEE · Bali: Mt Batur jeep sunrise tour (draft storyboard)
+# AbsolutLEE abroad · Bali: Mt Batur jeep sunrise tour
 
-The video follows the tour in time order, with a big time stamp starting each part (like the balivoyagerco reference) and our usual look: Bootzy callouts, eye-level lowercase captions, iOS emoji pairs, mid_warm grade, TikTok safe area, sound effects only on events. Target length is 35–50s.
+Text only, with no voiceover; the trending sound gets added in TikTok. No price. The promo code ROCHELLEKLOOK goes in the caption, and the video only says "discount off klook experiences". Friends are OK to show. Look: Bootzy callouts, lowercase, iOS emoji pairs, mid_warm grade, TikTok safe area.
+Title: "absolutlee" (butter yellow) / "abroad" (white, with 🌍 as the o), blue bracket tags "[ mt batur sunrise jeep ]" and "[ bali, indonesia ]", plus 🇮🇩 ☀️ ✈️.
+Time stamps are the real capture times on 27 Jun (phone clocks, Bali time). The photographer's Sony clock is wrong (2019), but all 40 of its shots are from the black lava stop around 7:40.
 
-Tour (from the Klook booking): Mount Batur Jeep Sunrise Day Tour With Photographer · private tour with round-trip hotel transfers · English guide · 4 pax · 27 Jun 2026.
-
-| # | Time stamp | Footage | On-screen text |
-|---|---|---|---|
-| 1 | — | **Hook:** the two of us watching the sunrise together (≤2.5s) | "worth the 2am wake up" 🌅🥱 (time to be confirmed) |
-| 2 | **2:00 AM** | Hotel pickup, dark drive | "hotel pickup" 🚐😴 |
-| 3 | **4:45 AM** | Kintamani: jeep briefing, convoy climbing in the dark with headlights | "jeep up to the sunrise point" 🚙🌋 |
-| 4 | **~6:15 AM** | Sunrise at Mt Batur: sea of clouds, sun coming up, us on the jeep | "no hiking no sweating" ☀️🌋 |
-| 5 | **7:00 AM** | Black lava tour: 4WD across the lava field, posing on the jeep | "black lava from past eruptions" 🖤🌋 |
-| 6 | — | Driver-photographer: the edited photos flash in as polaroids | "all raw files + 12 edited photos + 2 videos" 📸✨ |
-| 7 | — | **End card:** a ticket-style promo card | "book on klook · code ROCHELLEKLOOK" 🎟️🧡 |
-
-Each time stamp ticks in (clock SFX) and then cuts quickly through 3–5 clips of that part of the tour.
+| Time | Text | Clips (see scene_plan.jpg) |
+|---|---|---|
+| hook | worth the 2am wake up 🌅🥱 | IMG_0726 (Josh pointing at the sunrise) or IMG_0725 (both watching) |
+| 2:20 AM | pickup from our airbnb 🚐😴 | 0636, 5002, 5001 |
+| 4:00 AM | switch to the jeeps 🚙🌙 | 5003, 5004, 0645, 5010 |
+| 4:40 AM | stars above the clouds ✨ + breakfast box | 0649, 0652, 0651, 5031 |
+| 5:20 AM | hot drinks at the hut ☕ | 0684, 5037 |
+| 5:45 AM | first light 🌄 | 0702 (timelapse), 0698, 0695 |
+| 6:00 AM | jeep photoshoot 📸 | 5053, 5057, 5062, 5091 |
+| 6:15 AM | sea of clouds ☁️ | 5097, 0722, 0727, 0718 |
+| 6:35 AM | sun is up ☀️ | 0761, 0769, 0767 |
+| 7:40 AM | black lava from past eruptions 🖤🌋 + photographer included | 0777, 0778, PIC01582, PIC01613 |
+| 8:05 AM | back through the farms 🌿 | 0780 |
+| end | book on klook · discount off klook experiences (code in caption) 🎟️🧡 | 5062 |
