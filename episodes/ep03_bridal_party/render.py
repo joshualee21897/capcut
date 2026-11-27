@@ -207,10 +207,10 @@ def word_end(t_end, limit):
         env = np.sqrt((x[:n * 160].reshape(n, 160) ** 2).mean(1) + 1e-12)        # 10 ms frames
         _ENV = (env, np.percentile(env, 15))
     env, floor = _ENV
-    i, stop = int(t_end * 100), int(min(t_end + 0.5, limit) * 100)
-    while i < stop and i < len(env) and env[i] > floor * 3:
+    i, stop = int((t_end + 0.15) * 100), int(min(t_end + 0.6, limit) * 100)   # always keep 150 ms of tail
+    while i < stop and i < len(env) and env[i] > floor * 2:
         i += 1
-    return min(i / 100 + 0.08, limit)
+    return min(i / 100 + 0.12, limit)
 
 
 def talk_words(a, b):
@@ -385,10 +385,10 @@ def item2(src_t, nm, pos, h=340, dur=1.0, maxw=460):
     end = src_to_tl(mapA, GYM_END) if GYM_END else t + dur
     ov.append(Overlay(t, end, spr, pos, 'bounce', 6 if pos[0] > W / 2 else -6)); hit('pop', t, 0.5)
 GYM_END = 46.2                                               # everything stays until 'getting jacked'
-item2(36.8, ITEMS2 + 'gm_bag_only', (540, 500), h=290, maxw=420)
-item2(40.0, ITEMS2 + 'g6556_1', (190, 520), h=230, maxw=280); item2(41.2, ITEMS2 + 'g6554_1', (890, 520), h=280, maxw=230)
-item2(42.3, ITEMS2 + 'g6582_1', (190, 830), h=200, maxw=280); item2(43.4, ITEMS2 + 'g6560_1', (890, 830), h=200, maxw=280)
-item2(44.8, ITEMS2 + 'g6553_1', (190, 1110), h=210, maxw=280)
+item2(36.8, ITEMS2 + 'gm_bag_only', (560, 470), h=270, maxw=380)          # top row + right column, clear of his head
+item2(40.0, ITEMS2 + 'g6556_1', (200, 470), h=220, maxw=260); item2(41.2, ITEMS2 + 'g6554_1', (900, 470), h=260, maxw=210)
+item2(42.3, ITEMS2 + 'g6582_1', (890, 760), h=190, maxw=260); item2(43.4, ITEMS2 + 'g6560_1', (890, 1010), h=190, maxw=260)
+item2(44.8, ITEMS2 + 'g6553_1', (890, 1250), h=190, maxw=250)
 callout_at(mapA, 46.3, [('GETTING', 120, 'l'), ('JACKED', 210, 'r')], ['💪', '🏋️'])
 callout_at(mapA, 50.6, [('SAME.', 140, 'l'), ('SAME.', 140, 'c'), ('SAME.', 140, 'r')], ['🏋️', '💪'])
 callout_at(mapA, 56.4, [('ONE TABLE', 120, 'c'), ('ONE TAKE', 150, 'c')], ['🎬', '✅'], dur=2.6)
