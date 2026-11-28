@@ -20,14 +20,15 @@ REF = (F + 'IMG_9833.MOV', 1.5)
 BOX = (0.05, 0.12, 0.75, 0.30)                 # booth sign template (no people in it)
 CUTS = [0, 0.87, 1.67, 2.6, 3.43, 4.3, 5.07, 5.9, 6.87]
 # every adult segment starts inside a held pose (measured: low motion in the booth window), never mid-move
-CLIPS = [('IMG_9833.MOV', 3.9),                # round 1: double peace signs
-         ('IMG_9833.MOV', 6.45),               #          hands on cheeks
-         ('IMG_9833.MOV', 11.05),              #          both laughing, leaning in
-         ('IMG_9831.MOV', 0.7),                #          kids: girl's peace sign, boy grinning
-         ('IMG_9833.MOV', 22.1),               # round 2: Rochelle waving both hands
-         ('IMG_9833.MOV', 42.6),               #          hugging Josh's arm, hand on chin
-         ('IMG_9833.MOV', 36.7),               #          both leaning down low, peace sign
-         ('IMG_9830.MOV', 7.6)]                #          kids (other clip): girl holding the Jessie cutout
+# picked from Rochelle's screenshots; each start is the stillest window around that moment
+CLIPS = [('IMG_9833.MOV', 6.62),               # round 1: hands on cheeks (0:07)
+         ('IMG_9833.MOV', 13.86),              #          peace sign, Josh's hand on the alien (0:14)
+         ('IMG_9833.MOV', 19.90),              #          both waving (0:20)
+         ('IMG_9830.MOV', 9.15),               #          kids: girl leaning over Jessie, holding hands
+         ('IMG_9833.MOV', 26.98),              # round 2: double peace signs (0:27)
+         ('IMG_9833.MOV', 36.67),              #          leaning in, peace sign (0:37)
+         ('IMG_9833.MOV', 43.27),              #          squeezing Josh's cheeks (0:44)
+         ('IMG_9831.MOV', 12.77)]              #          kids: girl's hand on cheek + tongue out (0:12)
 BOOTH_C = (168, 330)                           # booth centre in reference working coords
 
 tracks = []
@@ -45,7 +46,7 @@ for k, (name, ss) in enumerate(CLIPS):
         min(t[2] for t in tr), max(t[2] for t in tr), min(t[4] for t in tr), max(t[4] for t in tr)))
 
 # biggest 9:16 rectangle every frame covers, centred on the booth, with a small safety margin
-cov = [coverage(t) for t in tracks]
+cov = [coverage(t) for (n, _), t in zip(CLIPS, tracks) if n == 'IMG_9833.MOV']
 X0, Y0 = max(c[0] for c in cov), max(c[1] for c in cov)
 X1, Y1 = min(c[2] for c in cov), min(c[3] for c in cov)
 cx, cy = BOOTH_C
@@ -54,13 +55,17 @@ CROP = (cx - half_w, cy - half_w * 16 / 9, cx + half_w, cy + half_w * 16 / 9)
 print('covered', [round(v, 1) for v in (X0, Y0, X1, Y1)], 'crop', [round(v, 1) for v in CROP],
       'zoom %.2f' % (WS / (2 * half_w)))
 
-shots = []
+shots, plate = [], None
 for k, ((name, ss), tr) in enumerate(zip(CLIPS, tracks)):
     dur = CUTS[k + 1] - CUTS[k]
-    key = hashlib.md5(repr(('lock5', name, ss, dur, [round(v, 2) for v in CROP], tr[0])).encode()).hexdigest()[:10]
+    key = hashlib.md5(repr(('lock6', name, ss, dur, [round(v, 2) for v in CROP], tr[0])).encode()).hexdigest()[:10]
     out = CACHE / f'minime_lock_{key}.mp4'
     if not out.exists():
-        render_locked(F + name, ss, dur, tr, CROP, out, size=(OW, OH))
+        render_locked(F + name, ss, dur, tr, CROP, out, size=(OW, OH), plate=plate)
+    if plate is None:                          # first adult shot's first frame = still booth plate for edge fill
+        plate = Image.open(__import__('io').BytesIO(__import__('subprocess').run(
+            ['ffmpeg', '-v', 'error', '-i', str(out), '-frames:v', '1', '-f', 'image2pipe', '-c:v', 'png', '-'],
+            capture_output=True).stdout)).convert('RGB')
     shots.append(Shot(str(out), dur, 0.0, zoom=(1.0, 1.0)))
 
 # captions: white Bootzy, one line per pose change, staggered like the trend; resets each round

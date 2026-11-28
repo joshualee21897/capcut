@@ -81,7 +81,7 @@ def coverage(tr):
     return xs0, ys0, xs1, ys1
 
 
-def render_locked(path, ss, dur, tr, crop, out, size=(1080, 1920), fps=30):
+def render_locked(path, ss, dur, tr, crop, out, size=(1080, 1920), fps=30, plate=None):
     """Write the clip cropped to `crop` (reference working coords) for every frame using its track."""
     m = SRC_W / WS
     enc = subprocess.Popen(['ffmpeg', '-y', '-v', 'error', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{size[0]}x{size[1]}',
@@ -100,6 +100,14 @@ def render_locked(path, ss, dur, tr, crop, out, size=(1080, 1920), fps=30):
         coef = (rx * q, -k * ry / sy * q, (crop[0] - dx - k * (crop[1] - ty) / sy) * q,
                 0.0, ry / sy * q, (crop[1] - ty) / sy * q)
         im = Image.frombuffer('RGB', (SRC_W, SRC_H), buf).transform(size, Image.AFFINE, coef, Image.BICUBIC)
+        if plate is not None:                  # fill any area this camera didn't see with the still booth plate
+            mask = Image.new('L', (SRC_W, SRC_H), 255).transform(size, Image.AFFINE, coef, Image.BILINEAR)
+            if mask.getextrema()[0] < 255:
+                from PIL import ImageFilter
+                mask = mask.point(lambda v: 255 if v > 250 else 0).filter(ImageFilter.MinFilter(9)).filter(ImageFilter.GaussianBlur(6))
+                base = plate.copy()
+                base.paste(im, (0, 0), mask)
+                im = base
         enc.stdin.write(im.tobytes())
         n += 1
     dec.stdout.close(); dec.wait()
