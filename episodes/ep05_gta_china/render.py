@@ -8,7 +8,6 @@ import os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
 os.environ.setdefault('EDIT_LOOK', 'mid_warm')
 from editor import *          # noqa
-from PIL import ImageFont
 
 G = '/home/user/footage_gta/'
 HOOK = sys.argv[1]
@@ -34,26 +33,29 @@ class Dip(Overlay):
         canvas.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, int(255 * max(0, min(a, 1))))))
 
 
-f = ImageFont.truetype('/usr/share/fonts/opentype/inter/Inter-SemiBold.otf', 58)
+WHITE = (255, 255, 255)
 
 
-def label(s):
-    """Plain TikTok-style white text with a thin dark outline + soft shadow so it reads on busy images."""
-    l, t_, r, b_ = ImageDraw.Draw(Image.new('RGBA', (1, 1))).textbbox((0, 0), s, font=f, anchor='lt', stroke_width=3)
-    im = Image.new('RGBA', (r - l + 40, b_ - t_ + 40), (0, 0, 0, 0))
-    sh = Image.new('RGBA', im.size, (0, 0, 0, 0))
-    ImageDraw.Draw(sh).text((20 - l, 20 - t_), s, font=f, fill=(0, 0, 0, 150), anchor='lt', stroke_width=3, stroke_fill=(0, 0, 0, 150))
-    im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(6)))
-    ImageDraw.Draw(im).text((20 - l, 20 - t_), s, font=f, fill=(255, 255, 255), anchor='lt',
-                            stroke_width=3, stroke_fill=(20, 20, 20, 200))
-    return im
+def label(s, ch=None, size=74):
+    """White Bootzy text (brand font) with a soft shadow, optional emoji after it; kept inside the safe width."""
+    spr = sprite_text(s, font('bootzy', size), WHITE, shadow=12, pad=24)
+    if ch:
+        e = sticker(ch, int(size * 1.15), 5)
+        out = Image.new('RGBA', (spr.width + e.width - 30, max(spr.height, e.height)), (0, 0, 0, 0))
+        out.alpha_composite(spr, (0, (out.height - spr.height) // 2))
+        out.alpha_composite(e, (spr.width - 30, (out.height - e.height) // 2))
+        spr = out
+    maxw = SAFE[2] - SAFE[0] + 40
+    if spr.width > maxw:
+        spr = spr.resize((maxw, int(spr.height * maxw / spr.width)), Image.LANCZOS)
+    return spr
 
 
-hook_txt = label('how was your trip to china?')
-me_txt = label('me in china:')
+hook_txt = label('how was your trip to china?', '🇨🇳')
+me_txt = label('me in china:', size=82)
 ov = [Dip(4.2, 4.8, hook_txt, (0, 0), 'none', full=True),
-      Overlay(0.0, CUTS[0], hook_txt, (W / 2, 330), 'none', fade_out=False),
-      Overlay(CUTS[0], CUTS[-1], me_txt, (W / 2, 330), 'none', fade_out=False)]
+      Overlay(0.0, CUTS[0], hook_txt, (W / 2, 360), 'none', fade_out=False),
+      Overlay(CUTS[0], CUTS[-1], me_txt, (W / 2, 360), 'none', fade_out=False)]
 
 render(shots, ov, [], [], OUT, total=CUTS[-1])         # silent: trending sound goes on in TikTok
 print('wrote', OUT)
