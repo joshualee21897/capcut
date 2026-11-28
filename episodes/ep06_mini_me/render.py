@@ -19,14 +19,15 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else 'renders/ep06_mini_me_preview.mp4'
 REF = (F + 'IMG_9833.MOV', 1.5)
 BOX = (0.05, 0.12, 0.75, 0.30)                 # booth sign template (no people in it)
 CUTS = [0, 0.87, 1.67, 2.6, 3.43, 4.3, 5.07, 5.9, 6.87]
-CLIPS = [('IMG_9833.MOV', 1.3),                # round 1: standing
-         ('IMG_9833.MOV', 6.5),                #          hands on cheeks
-         ('IMG_9833.MOV', 12.2),               #          both leaning, laughing
-         ('IMG_9831.MOV', 1.6),                #          kids: girl's peace sign
-         ('IMG_9833.MOV', 26.2),               # round 2: peace sign
-         ('IMG_9833.MOV', 19.2),               #          waving
-         ('IMG_9833.MOV', 32.2),               #          both bent down low
-         ('IMG_9831.MOV', 13.9)]               #          kids: hand on cheek
+# every adult segment starts inside a held pose (measured: low motion in the booth window), never mid-move
+CLIPS = [('IMG_9833.MOV', 3.9),                # round 1: double peace signs
+         ('IMG_9833.MOV', 6.45),               #          hands on cheeks
+         ('IMG_9833.MOV', 11.05),              #          both laughing, leaning in
+         ('IMG_9831.MOV', 0.7),                #          kids: girl's peace sign, boy grinning
+         ('IMG_9833.MOV', 22.1),               # round 2: Rochelle waving both hands
+         ('IMG_9833.MOV', 42.6),               #          hugging Josh's arm, hand on chin
+         ('IMG_9833.MOV', 36.7),               #          both leaning down low, peace sign
+         ('IMG_9830.MOV', 7.6)]                #          kids (other clip): girl holding the Jessie cutout
 BOOTH_C = (168, 330)                           # booth centre in reference working coords
 
 tracks = []
