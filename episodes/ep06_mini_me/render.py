@@ -25,8 +25,8 @@ CLIPS = [('IMG_9833.MOV', 6.62),               # round 1: hands on cheeks (0:07)
          ('IMG_9833.MOV', 13.86),              #          peace sign, Josh's hand on the alien (0:14)
          ('IMG_9833.MOV', 19.90),              #          both waving (0:20)
          ('IMG_9830.MOV', 9.15),               #          kids: girl leaning over Jessie, holding hands
-         ('IMG_9833.MOV', 26.98),              # round 2: double peace signs (0:27)
-         ('IMG_9833.MOV', 36.67),              #          leaning in, peace sign (0:37)
+         ('IMG_9833.MOV', 36.67),              # round 2: leaning in, peace sign (0:37)
+         ('IMG_9833.MOV', 26.98),              #          double peace signs (0:27)
          ('IMG_9833.MOV', 43.27),              #          squeezing Josh's cheeks (0:44)
          ('IMG_9831.MOV', 12.77)]              #          kids: girl's hand on cheek + tongue out (0:12)
 BOOTH_C = (168, 330)                           # booth centre in reference working coords
@@ -70,7 +70,7 @@ for k, ((name, ss), tr) in enumerate(zip(CLIPS, tracks)):
 
 # captions: white Bootzy, one line per pose change, staggered like the trend; resets each round
 LINES = ['today we will', 'turn into', 'cute little', 'mini us']
-POS = [(330, 230), (460, 320), (350, 410), (400, 525)]     # left side: clear of Josh's head
+POS = [(300, 240), (460, 330), (600, 420), (630, 530)]     # staircase to the right, like the trend
 top = []
 for r in range(2):
     base = 4 * r
@@ -78,7 +78,7 @@ for r in range(2):
         t0, t1 = CUTS[base + k], CUTS[base + 4]
         top.append(Overlay(t0, t1, sprite_text(s_, font('bootzy', 80 if k < 3 else 104), (255, 255, 255),
                                                shadow=12, pad=24), POS[k], 'pop', fade_out=False))
-    top.append(Overlay(CUTS[base + 3] + 0.06, CUTS[base + 4], sticker('🤠', 104), (650, 500), 'bounce', 8,
+    top.append(Overlay(CUTS[base + 3] + 0.06, CUTS[base + 4], sticker('🤠', 100), (865, 500), 'bounce', 8,
                        fade_out=False))
 
 render(shots, top, [], [], OUT, total=CUTS[-1])      # silent: trending sound goes on in TikTok
